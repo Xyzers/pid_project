@@ -1,0 +1,54 @@
+2025-06-01 01:04:58,523 - INFO - [config_loader:111] - C:\Jupyter\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Jupyter\pid_project\trace\pid_model_builder_log.txt
+2025-06-01 01:04:58,524 - INFO - [config_loader:120] - C:\Jupyter\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Jupyter\pid_project\pid_model_builder.ini'.
+INFO - [pid_model_builder_main:53] - C:\Jupyter\pid_project\pid_model_builder_main.py - --- Démarrage du script (fichier exécuté: pid_model_builder_main.py) ---
+INFO - [pid_model_builder_main:56] - C:\Jupyter\pid_project\pid_model_builder_main.py - --- Utilisation du nom de base 'pid_model_builder' pour le fichier de configuration .ini ---
+INFO - [pid_model_builder_main:59] - C:\Jupyter\pid_project\pid_model_builder_main.py - --- Démarrage de la phase de création de modèle de procédé ---
+INFO - [db_utils:30] - C:\Jupyter\pid_project\src\db_utils.py - Connexion à SQL Server 'FRCDKSPA-0002/Runtime' avec l'utilisateur 'USE_Runtime'.
+INFO - [db_utils:44] - C:\Jupyter\pid_project\src\db_utils.py - Connexion à la base de données réussie et testée.
+INFO - [db_utils:61] - C:\Jupyter\pid_project\src\db_utils.py - Construction de la requête SQL...
+INFO - [db_utils:136] - C:\Jupyter\pid_project\src\db_utils.py - Requête SQL construite:
+
+    SELECT DateTime, MAX(CASE WHEN TagName = 'N1N2_tt_4401' THEN Value END) AS PV_real,
+        MAX(CASE WHEN TagName = 'N1N2_tIC_4401_out' THEN Value END) AS MV_real,
+        MAX(CASE WHEN TagName = 'N1N2_tIC_4401_SP' THEN Value END) AS SP_real,
+        MAX(CASE WHEN TagName = 'N1N2_XV4422_zso' THEN Value END) AS Dist1_real,
+        MAX(CASE WHEN TagName = 'ACOM_T_COM_XV_02_O' THEN Value END) AS Dist2_real
+    FROM History
+    WHERE TagName IN ('N1N2_tt_4401', 'N1N2_tIC_4401_out', 'N1N2_tIC_4401_SP', 'N1N2_XV4422_zso', 'ACOM_T_COM_XV_02_O')
+      AND DateTime >= '2025-05-17 18:34:52' AND DateTime <= '2025-05-17 22:44:00'
+      AND wwRetrievalMode = 'Cyclic' AND wwResolution = 100 AND wwVersion = 'Latest'
+    GROUP BY DateTime
+    ORDER BY DateTime ASC;
+    
+INFO - [db_utils:143] - C:\Jupyter\pid_project\src\db_utils.py - Données extraites avec succès. Forme: (149481, 6)
+INFO - [data_processing:56] - C:\Jupyter\pid_project\src\data_processing.py - Pas de temps médian des données nettoyées: 0 days 00:00:00.100000
+INFO - [pid_model_builder_main:94] - C:\Jupyter\pid_project\pid_model_builder_main.py - Colonne Kp_hist non présente dans clean_df pour statistiques (tag optionnel).
+INFO - [pid_model_builder_main:94] - C:\Jupyter\pid_project\pid_model_builder_main.py - Colonne Ti_hist non présente dans clean_df pour statistiques (tag optionnel).
+INFO - [pid_model_builder_main:94] - C:\Jupyter\pid_project\pid_model_builder_main.py - Colonne Td_hist non présente dans clean_df pour statistiques (tag optionnel).
+INFO - [feature_engineering:62] - C:\Jupyter\pid_project\src\feature_engineering.py - Création de 10 lag(s) pour PV_real.
+INFO - [feature_engineering:62] - C:\Jupyter\pid_project\src\feature_engineering.py - Création de 10 lag(s) pour MV_real.
+INFO - [feature_engineering:62] - C:\Jupyter\pid_project\src\feature_engineering.py - Création de 10 lag(s) pour SP_real.
+INFO - [feature_engineering:62] - C:\Jupyter\pid_project\src\feature_engineering.py - Création de 10 lag(s) pour Dist1_real.
+INFO - [feature_engineering:62] - C:\Jupyter\pid_project\src\feature_engineering.py - Création de 10 lag(s) pour Dist2_real.
+INFO - [feature_engineering:79] - C:\Jupyter\pid_project\src\feature_engineering.py - 10 lignes supprimées après création des lags (NaNs dus aux shifts).
+INFO - [feature_engineering:88] - C:\Jupyter\pid_project\src\feature_engineering.py - Features (X) shape: (149471, 50), Target (y) shape: (149471,)
+INFO - [feature_engineering:95] - C:\Jupyter\pid_project\src\feature_engineering.py - Colonnes des features finales: ['PV_real_lag_1', 'PV_real_lag_2', 'PV_real_lag_3', 'PV_real_lag_4', 'PV_real_lag_5', 'PV_real_lag_6', 'PV_real_lag_7', 'PV_real_lag_8', 'PV_real_lag_9', 'PV_real_lag_10', 'MV_real_lag_1', 'MV_real_lag_2', 'MV_real_lag_3', 'MV_real_lag_4', 'MV_real_lag_5', 'MV_real_lag_6', 'MV_real_lag_7', 'MV_real_lag_8', 'MV_real_lag_9', 'MV_real_lag_10', 'SP_real_lag_1', 'SP_real_lag_2', 'SP_real_lag_3', 'SP_real_lag_4', 'SP_real_lag_5', 'SP_real_lag_6', 'SP_real_lag_7', 'SP_real_lag_8', 'SP_real_lag_9', 'SP_real_lag_10', 'Dist1_real_lag_1', 'Dist1_real_lag_2', 'Dist1_real_lag_3', 'Dist1_real_lag_4', 'Dist1_real_lag_5', 'Dist1_real_lag_6', 'Dist1_real_lag_7', 'Dist1_real_lag_8', 'Dist1_real_lag_9', 'Dist1_real_lag_10', 'Dist2_real_lag_1', 'Dist2_real_lag_2', 'Dist2_real_lag_3', 'Dist2_real_lag_4', 'Dist2_real_lag_5', 'Dist2_real_lag_6', 'Dist2_real_lag_7', 'Dist2_real_lag_8', 'Dist2_real_lag_9', 'Dist2_real_lag_10']
+INFO - [data_processing:87] - C:\Jupyter\pid_project\src\data_processing.py - Données divisées: Train 104629 (70.0%), Validation 22420 (15.0%), Test 22422 (15.0%)
+INFO - [data_processing:132] - C:\Jupyter\pid_project\src\data_processing.py - Données mises à l'échelle avec MinMaxScaler.
+INFO - [modeling:28] - C:\Jupyter\pid_project\src\modeling.py - Entraînement RandomForest: n_est=100, depth=7, leaf=10, split=2, state=42
+INFO - [modeling:40] - C:\Jupyter\pid_project\src\modeling.py - Entraînement du modèle terminé.
+INFO - [modeling:67] - C:\Jupyter\pid_project\src\modeling.py - Évaluation modèle (test): RMSE: 0.0793, R²: 0.9994, MAE: 0.0106
+INFO - [plotting:30] - C:\Jupyter\pid_project\src\plotting.py - Graphique sauvegardé dans 'C:\Jupyter\pid_project\trace\pid_model_pv_prediction_plot.png'.
+INFO - [modeling:97] - C:\Jupyter\pid_project\src\modeling.py - Modèle sauvegardé dans 'C:\Jupyter\pid_project\Pid_Model\trained.joblib'.
+INFO - [modeling:105] - C:\Jupyter\pid_project\src\modeling.py - Scalers sauvegardés dans 'C:\Jupyter\pid_project\Pid_Model\scalers.joblib'.
+INFO - [pid_model_builder_main:138] - C:\Jupyter\pid_project\pid_model_builder_main.py - Script de création de modèle de procédé terminé avec succès.
+INFO - [pid_model_builder_main:168] - C:\Jupyter\pid_project\pid_model_builder_main.py - Moteur BD fermé.
+INFO - [pid_model_builder_main:171] - C:\Jupyter\pid_project\pid_model_builder_main.py - --- Fin du script (fichier exécuté: pid_model_builder_main.py) ---
+ERROR - [manager:46] - C:\Users\EDVA10053293\AppData\Local\Programs\Python\Python310\lib\site-packages\ipykernel\comm\manager.py - No such comm target registered: jupyter.widget.control
+WARNING - [base_comm:246] - C:\Users\EDVA10053293\AppData\Local\Programs\Python\Python310\lib\site-packages\comm\base_comm.py - No such comm: 1ad47485-d164-46db-80bf-d778f6ece2ab
+ERROR - [manager:46] - C:\Users\EDVA10053293\AppData\Local\Programs\Python\Python310\lib\site-packages\ipykernel\comm\manager.py - No such comm target registered: jupyter.widget.control
+WARNING - [base_comm:246] - C:\Users\EDVA10053293\AppData\Local\Programs\Python\Python310\lib\site-packages\comm\base_comm.py - No such comm: b0b507cb-e8b0-4d54-86e1-59901caacf53
+ERROR - [manager:46] - C:\Users\EDVA10053293\AppData\Local\Programs\Python\Python310\lib\site-packages\ipykernel\comm\manager.py - No such comm target registered: jupyter.widget.control
+WARNING - [base_comm:246] - C:\Users\EDVA10053293\AppData\Local\Programs\Python\Python310\lib\site-packages\comm\base_comm.py - No such comm: 4179f1ef-8607-4e97-a737-cba8e59efbe8
+ERROR - [manager:46] - C:\Users\EDVA10053293\AppData\Local\Programs\Python\Python310\lib\site-packages\ipykernel\comm\manager.py - No such comm target registered: jupyter.widget.control
+WARNING - [base_comm:246] - C:\Users\EDVA10053293\AppData\Local\Programs\Python\Python310\lib\site-packages\comm\base_comm.py - No such comm: c858b48a-bc17-4193-8c14-49d2bba3a64d
