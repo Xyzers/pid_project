@@ -1,0 +1,25 @@
+# Fichiers et dossiers Jupyter
+.ipynb_checkpoints/
+Untitled.ipynb
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# Fichiers de log
+*.log
+
+# Fichiers temporaires ou de build spécifiques au projet (ajuster si besoin)
+Arbre_project.txt
+# Pid_Model/scalers.joblib # Décommenter si tu ne veux pas versionner les modèles
+# Pid_Model/trained.joblib # Décommenter si tu ne veux pas versionner les modèles
+
+# Dossiers d'environnement virtuel (si tu en utilises plus tard)
+venv/
+.venv/
+env/
+.env/
+
+# Fichiers IDE spécifiques (optionnel)
+.vscode/
+.idea/
