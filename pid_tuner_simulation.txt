@@ -1,4 +1,11 @@
-2025-06-02 19:50:26,960 - INFO - [config_loader:111] - C:\Jupyter\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Jupyter\pid_project\pid_tuner_simulation.txt
-2025-06-02 19:50:26,961 - INFO - [config_loader:120] - C:\Jupyter\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Jupyter\pid_project\pid_tuner_simulation.ini'.
+2025-06-02 19:59:18,883 - INFO - [config_loader:111] - C:\Jupyter\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Jupyter\pid_project\pid_tuner_simulation.txt
+2025-06-02 19:59:18,884 - INFO - [config_loader:120] - C:\Jupyter\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Jupyter\pid_project\pid_tuner_simulation.ini'.
 INFO - [pid_tuner_main:101] - C:\Jupyter\pid_project\pid_tuner_main.py - Configuration 'pid_tuner_simulation.ini' chargée et logging actif.
-CRITICAL - [pid_tuner_main:135] - C:\Jupyter\pid_project\pid_tuner_main.py - Clé 'model_file' manquante dans la section [MODEL_PATHS] du fichier 'pid_tuner_simulation.ini'.
+INFO - [pid_tuner_main:141] - C:\Jupyter\pid_project\pid_tuner_main.py - Chargement du modèle ML et des scalers...
+CRITICAL - [pid_tuner_main:294] - C:\Jupyter\pid_project\pid_tuner_main.py - Erreur d'exécution inattendue: name 'model_paths_config' is not defined
+Traceback (most recent call last):
+  File "C:\Jupyter\pid_project\pid_tuner_main.py", line 153, in run_pid_tuning_simulation
+    model, scaler_X, scaler_y = load_model_and_scalers(config['MODEL_PATHS'])
+  File "C:\Jupyter\pid_project\src\modeling.py", line 113, in load_model_and_scalers
+    print(f"DEBUG_MODELING: model_paths_config reçu: {model_paths_config}")
+NameError: name 'model_paths_config' is not defined
