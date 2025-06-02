@@ -18,9 +18,10 @@ from src.pid_simulation.pid_single_simulation import evaluer_performance_pid, pr
 logger = logging.getLogger(__name__)
 
 def main():
+    print("DEBUG: Entrée dans la fonction main()") 
     script_name_stem = "pid_tuner_simulation" # Pour le nom du .ini et du log
     config_file_name = f"{script_name_stem}.ini" # Attendu à la racine
-
+    print(f"DEBUG: Tentative de chargement du fichier config: {config_file_name}") # << AJOUTER
     try:
         # Charger la config .ini et configurer le logging
         # load_config_and_setup_logging s'attend à ce que le .ini soit dans le même dossier que le script appelant
@@ -28,6 +29,7 @@ def main():
             script_stem_for_config_file=script_name_stem, # Utilisé pour le nom du log
             config_file_name=config_file_name # Nom direct du fichier .ini
         )
+        print("DEBUG: Configuration et logging initialisés.")
         logger.info(f"Configuration '{config_file_name}' chargée.")
     except Exception as e:
         print(f"Erreur critique lors du chargement de la configuration ou du logging: {e}", file=sys.stderr)
@@ -35,6 +37,7 @@ def main():
 
     try:
         # --- 1. Charger le modèle ML et les scalers ---
+        
         logger.info("Chargement du modèle ML et des scalers...")
         model_path = Path(config['MODEL_PATHS']['model_file'])
         scalers_path = Path(config['MODEL_PATHS']['scalers_file'])
@@ -45,11 +48,14 @@ def main():
         # La fonction load_model_and_scalers doit retourner model, scaler_X, scaler_y
         # Le scaler_X doit être celui qui a été fitté sur les features d'entrée du modèle (avec lags)
         # Le scaler_y doit être celui qui a été fitté sur la target (PV)
+        print("DEBUG: Avant chargement du modèle ML")
         model, scaler_X, scaler_y = load_model_and_scalers(config['MODEL_PATHS'])
         model_objects = {'model': model, 'scaler_X': scaler_X, 'scaler_y': scaler_y}
+        print("DEBUG: Modèle ML chargé")
         logger.info("Modèle ML et scalers chargés.")
 
         # --- 2. Acquérir et préparer les données initiales pour la simulation ---
+        print("DEBUG: Avant acquisition des données initiales")
         logger.info("Acquisition des données initiales pour les lags du modèle...")
         db_engine = get_db_engine(config['DATABASE'])
         
@@ -72,6 +78,7 @@ def main():
             config['DATABASE']['table_name']
         )
         initial_raw_df = extract_data(db_engine, sql_query_initial)
+        print(f"DEBUG: Données initiales brutes extraites, forme: {initial_raw_df.shape if not initial_raw_df.empty else 'Vide'}")
         db_engine.dispose()
 
         if initial_raw_df.empty:
@@ -146,6 +153,7 @@ def main():
         logger.info(f"Test avec PID={test_pid_params}, Scénario={test_scenario}")
 
         # --- 4. Exécuter la simulation et obtenir le score ET les données ---
+        print("DEBUG: Avant appel à evaluer_performance_pid")
         performance_score, sim_data_df = evaluer_performance_pid(
             test_pid_params,
             config, # Passer l'objet config complet
@@ -154,10 +162,12 @@ def main():
             initial_simulation_conditions, # Passer les conditions initiales préparées
             return_sim_data=True # Important pour obtenir les données pour le plot
         )
+        print(f"DEBUG: Retour de evaluer_performance_pid, score: {performance_score}, données sim non vides: {not sim_data_df.empty if sim_data_df is not None else 'None'}")
         logger.info(f"Simulation terminée. Score de performance ({config['PERFORMANCE_METRICS']['metric_type']}): {performance_score:.4f}")
 
         # --- 5. Générer le graphique des résultats ---
         if not sim_data_df.empty:
+            print("DEBUG: Avant génération du graphique")
             plt.figure(figsize=(16, 9))
             
             ax1 = plt.subplot(2, 1, 1)
@@ -184,12 +194,13 @@ def main():
                 plot_path.parent.mkdir(parents=True, exist_ok=True)
                 plt.savefig(plot_path)
                 logger.info(f"Graphique de simulation sauvegardé : '{plot_path}'")
-            
+            print("DEBUG: Graphique généré/sauvegardé/affiché")
             try:
                 plt.show()
             except Exception as e_plot:
                 logger.warning(f"Affichage du graphique interactif échoué (environnement non graphique?): {e_plot}")
         else:
+            print("DEBUG: sim_data_df est vide, pas de graphique.")
             logger.warning("Aucune donnée de simulation à plotter (simulation échouée ou score infini).")
 
     except FileNotFoundError as fnf_e:
