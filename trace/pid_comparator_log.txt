@@ -1,6 +1,6 @@
-2025-06-02 17:29:50,352 - INFO - [config_loader:111] - C:\Jupyter\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Jupyter\pid_project\trace\pid_comparator_log.txt
-2025-06-02 17:29:50,353 - INFO - [config_loader:120] - C:\Jupyter\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Jupyter\pid_project\pid_comparator.ini'.
-2025-06-02 17:29:50,354 - INFO - [pid_comparator_main:31] - C:\Jupyter\pid_project\pid_comparator_main.py - --- Démarrage pid_comparator.py ---
+2025-06-02 18:17:07,692 - INFO - [config_loader:111] - C:\Jupyter\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Jupyter\pid_project\trace\pid_comparator_log.txt
+2025-06-02 18:17:07,692 - INFO - [config_loader:120] - C:\Jupyter\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Jupyter\pid_project\pid_comparator.ini'.
+2025-06-02 18:17:07,692 - INFO - [pid_comparator_main:31] - C:\Jupyter\pid_project\pid_comparator_main.py - --- Démarrage pid_comparator.py ---
 INFO - [db_utils:30] - C:\Jupyter\pid_project\src\db_utils.py - Connexion à SQL Server 'FRCDKSPA-0002/Runtime' avec l'utilisateur 'USE_Runtime'.
 INFO - [db_utils:44] - C:\Jupyter\pid_project\src\db_utils.py - Connexion à la base de données réussie et testée.
 INFO - [db_utils:61] - C:\Jupyter\pid_project\src\db_utils.py - Construction de la requête SQL...
@@ -25,8 +25,8 @@ INFO - [pid_comparator_main:132] - C:\Jupyter\pid_project\pid_comparator_main.py
 INFO - [pid_comparator_main:143] - C:\Jupyter\pid_project\pid_comparator_main.py - Simulation PID (Tsamp=0.100s) avec 33601 points...
 INFO - [pid_controller:155] - C:\Jupyter\pid_project\src\pid_logic\pid_controller.py - PID Simulé: Inactif -> Actif. MV=24.030, I_term=11.880
 INFO - [pid_controller:160] - C:\Jupyter\pid_project\src\pid_logic\pid_controller.py - PID Simulé: Actif -> Inactif. MV gelée=18.449, I_term gelé=17.939
-2025-06-02 17:30:02,857 - INFO - [pid_comparator_main:185] - C:\Jupyter\pid_project\pid_comparator_main.py - Simulation PID terminée.
+2025-06-02 18:17:18,667 - INFO - [pid_comparator_main:185] - C:\Jupyter\pid_project\pid_comparator_main.py - Simulation PID terminée.
 INFO - [plotting_utils:123] - C:\Jupyter\pid_project\src\plotting_utils.py - Graphique de comparaison PID sauvegardé: 'C:\Jupyter\pid_project\trace\pid_comparison_plot.png'.
 INFO - [pid_comparator_main:195] - C:\Jupyter\pid_project\pid_comparator_main.py - Comparaison MV (globale, lignes avec MV_real et MV_sim non-NaN): MSE=0.0127, MAE=0.0536
 INFO - [pid_comparator_main:212] - C:\Jupyter\pid_project\pid_comparator_main.py - Moteur de base de données fermé.
-2025-06-02 17:30:04,791 - INFO - [pid_comparator_main:214] - C:\Jupyter\pid_project\pid_comparator_main.py - --- Fin pid_comparator.py ---
+2025-06-02 18:17:22,165 - INFO - [pid_comparator_main:214] - C:\Jupyter\pid_project\pid_comparator_main.py - --- Fin pid_comparator.py ---

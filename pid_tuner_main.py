@@ -206,4 +206,4 @@ def main():
     except FileNotFoundError as fnf_e:
         logger.error(f"Erreur de fichier non trouvé: {fnf_e}")
     except KeyError as ke_e:
-        logger.error(f"Erreur de clé manquante dans la configuration ou les données: {ke_e}. Assurez-vous que toutes les sections et clés nécessaires (ex: [ModelFeatures] depuis pid_model_builder.ini) sont présentes dans pid_tuner_simulation.ini ou correctement mappées.", exc_info=True)
+        logger.error(f"""Erreur de clé manquante dans la configuration ou les données: {ke_e}. Assurez-vous que toutes les sections et clés nécessaires (ex: [ModelFeatures] depuis pid_model_builder.ini) sont présentes dans pid_tuner_simulation.ini ou correctement mappées.""", exc_info=True)
