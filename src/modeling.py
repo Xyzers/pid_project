@@ -110,11 +110,11 @@ def save_model_and_scalers(model, scaler_X, scaler_y, config_output: dict):
 
 def load_model_and_scalers(config_output: dict):
     # ... (votre code pour load_model_and_scalers)
-    model_path_str = config_output.get('model_file') # Changed from 'model_save_path'
-    scalers_path_str = config_output.get('scalers_file') # Changed from 'scalers_save_path'
+    model_path_str = config_output.get('model_save_path') # Reverted to 'model_save_path'
+    scalers_path_str = config_output.get('scalers_save_path') # Reverted to 'scalers_save_path'
 
     if not model_path_str or not scalers_path_str:
-        logger.error("Chemins 'model_file' ou 'scalers_file' non définis.") # Updated error message
+        logger.error("Chemins 'model_save_path' ou 'scalers_save_path' non définis.") # Reverted error message
         raise ValueError("Chemins modèle/scalers non configurés.")
 
     model_path = Path(model_path_str).resolve()

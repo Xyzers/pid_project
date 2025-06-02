@@ -39,8 +39,8 @@ def main():
         # --- 1. Charger le modèle ML et les scalers ---
         
         logger.info("Chargement du modèle ML et des scalers...")
-        model_path = Path(config['MODEL_PATHS']['model_file'])
-        scalers_path = Path(config['MODEL_PATHS']['scalers_file'])
+        model_path = Path(config['MODEL_PATHS']['model_save_path']) # Updated key
+        scalers_path = Path(config['MODEL_PATHS']['scalers_save_path']) # Updated key
 
         if not model_path.is_file() or not scalers_path.is_file():
             raise FileNotFoundError(f"Fichier modèle ou scalers non trouvé. Vérifiez les chemins: {model_path}, {scalers_path}")
