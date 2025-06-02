@@ -110,7 +110,7 @@ def save_model_and_scalers(model, scaler_X, scaler_y, config_output: dict):
 
 def load_model_and_scalers(config_output: dict):
     # ... (votre code pour load_model_and_scalers)
-    print(f"DEBUG_MODELING: model_paths_config reçu: {model_paths_config}")
+    print(f"DEBUG_MODELING: config_output reçu: {config_output}")
     model_path_str = config_output.get('model_save_path')
     scalers_path_str = config_output.get('scalers_save_path')
 
