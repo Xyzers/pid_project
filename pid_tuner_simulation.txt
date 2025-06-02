@@ -1,0 +1,4 @@
+2025-06-02 19:50:26,960 - INFO - [config_loader:111] - C:\Jupyter\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Jupyter\pid_project\pid_tuner_simulation.txt
+2025-06-02 19:50:26,961 - INFO - [config_loader:120] - C:\Jupyter\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Jupyter\pid_project\pid_tuner_simulation.ini'.
+INFO - [pid_tuner_main:101] - C:\Jupyter\pid_project\pid_tuner_main.py - Configuration 'pid_tuner_simulation.ini' chargée et logging actif.
+CRITICAL - [pid_tuner_main:135] - C:\Jupyter\pid_project\pid_tuner_main.py - Clé 'model_file' manquante dans la section [MODEL_PATHS] du fichier 'pid_tuner_simulation.ini'.
