@@ -165,7 +165,7 @@ def run_pid_tuning_simulation(): # Nom de fonction plus descriptif
         hist_start_dt = pd.to_datetime(hist_start_str)
         hist_end_dt = hist_start_dt + pd.to_timedelta(initial_duration_s, unit='s')
 
-        temp_time_settings_for_query = configparser.SectionProxy(config, 'TIME_SETTINGS_QUERY_TEMP')
+        temp_time_settings_for_query = {}
         temp_time_settings_for_query['start_time'] = hist_start_dt.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         temp_time_settings_for_query['end_time'] = hist_end_dt.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         temp_time_settings_for_query['ww_resolution_ms'] = config['TIME_SETTINGS']['ww_resolution_ms']
