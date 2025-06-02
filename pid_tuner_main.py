@@ -116,7 +116,7 @@ def run_pid_tuning_simulation(): # Nom de fonction plus descriptif
         # --- Vérifications de configuration essentielles ---
         print("DEBUG_MAIN: Vérification des sections de configuration requises...", file=sys.stderr)
         required_sections = {
-            "MODEL_PATHS": ['model_file', 'scalers_file'],
+            "MODEL_PATHS": ['model_save_path', 'scalers_save_path'],
             "DATABASE": ['db_host', 'db_name', 'db_user', 'db_password', 'table_name'],
             "TIME_SETTINGS": ['historical_data_start_time', 'initial_data_duration_seconds', 'ww_resolution_ms'],
             "TAGS": [], # On vérifie juste la présence de la section
