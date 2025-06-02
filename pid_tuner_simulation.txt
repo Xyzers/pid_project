@@ -1,11 +1,20 @@
-2025-06-02 19:59:18,883 - INFO - [config_loader:111] - C:\Jupyter\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Jupyter\pid_project\pid_tuner_simulation.txt
-2025-06-02 19:59:18,884 - INFO - [config_loader:120] - C:\Jupyter\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Jupyter\pid_project\pid_tuner_simulation.ini'.
+2025-06-02 20:05:30,299 - INFO - [config_loader:111] - C:\Jupyter\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Jupyter\pid_project\pid_tuner_simulation.txt
+2025-06-02 20:05:30,300 - INFO - [config_loader:120] - C:\Jupyter\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Jupyter\pid_project\pid_tuner_simulation.ini'.
 INFO - [pid_tuner_main:101] - C:\Jupyter\pid_project\pid_tuner_main.py - Configuration 'pid_tuner_simulation.ini' chargée et logging actif.
 INFO - [pid_tuner_main:141] - C:\Jupyter\pid_project\pid_tuner_main.py - Chargement du modèle ML et des scalers...
-CRITICAL - [pid_tuner_main:294] - C:\Jupyter\pid_project\pid_tuner_main.py - Erreur d'exécution inattendue: name 'model_paths_config' is not defined
+INFO - [modeling:135] - C:\Jupyter\pid_project\src\modeling.py - Modèle et scalers chargés de 'C:\Jupyter\pid_project\Pid_Model\trained.joblib' et 'C:\Jupyter\pid_project\Pid_Model\scalers.joblib'.
+INFO - [pid_tuner_main:155] - C:\Jupyter\pid_project\pid_tuner_main.py - Modèle ML et scalers chargés.
+INFO - [pid_tuner_main:159] - C:\Jupyter\pid_project\pid_tuner_main.py - Acquisition des données initiales...
+INFO - [db_utils:30] - C:\Jupyter\pid_project\src\db_utils.py - Connexion à SQL Server 'FRCDKSPA-0002/Runtime' avec l'utilisateur 'USE_Runtime'.
+INFO - [db_utils:44] - C:\Jupyter\pid_project\src\db_utils.py - Connexion à la base de données réussie et testée.
+CRITICAL - [pid_tuner_main:294] - C:\Jupyter\pid_project\pid_tuner_main.py - Erreur d'exécution inattendue: No section: 'TIME_SETTINGS_QUERY_TEMP'
 Traceback (most recent call last):
-  File "C:\Jupyter\pid_project\pid_tuner_main.py", line 153, in run_pid_tuning_simulation
-    model, scaler_X, scaler_y = load_model_and_scalers(config['MODEL_PATHS'])
-  File "C:\Jupyter\pid_project\src\modeling.py", line 113, in load_model_and_scalers
-    print(f"DEBUG_MODELING: model_paths_config reçu: {model_paths_config}")
-NameError: name 'model_paths_config' is not defined
+  File "C:\Jupyter\pid_project\pid_tuner_main.py", line 169, in run_pid_tuning_simulation
+    temp_time_settings_for_query['start_time'] = hist_start_dt.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+  File "C:\Users\EDVA10053293\AppData\Local\Programs\Python\Python310\lib\configparser.py", line 1263, in __setitem__
+    return self._parser.set(self._name, key, value)
+  File "C:\Users\EDVA10053293\AppData\Local\Programs\Python\Python310\lib\configparser.py", line 1205, in set
+    super().set(section, option, value)
+  File "C:\Users\EDVA10053293\AppData\Local\Programs\Python\Python310\lib\configparser.py", line 903, in set
+    raise NoSectionError(section) from None
+configparser.NoSectionError: No section: 'TIME_SETTINGS_QUERY_TEMP'
