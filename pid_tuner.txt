@@ -1,6 +1,6 @@
-2026-04-12 20:34:18,529 - INFO - [config_loader:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner.txt
-2026-04-12 20:34:18,530 - INFO - [config_loader:120] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner.ini'.
-2026-04-12 20:34:18,530 - INFO - [pid_tuner_main:212] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - --- Démarrage pid_tuner_main.py (Tuner PID) ---
+2026-04-12 21:18:40,165 - INFO - [config_loader:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner.txt
+2026-04-12 21:18:40,166 - INFO - [config_loader:120] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner.ini'.
+2026-04-12 21:18:40,166 - INFO - [pid_tuner_main:212] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - --- Démarrage pid_tuner_main.py (Tuner PID) ---
 INFO - [pid_tuner_main:214] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Étape 1 : Chargement du Modèle de Procédé (Machine Learning)...
 INFO - [pid_tuner_main:219] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Tentative de chargement du modèle depuis : ./Pid_Model/trained.joblib
 INFO - [pid_tuner_main:222] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Tentative de chargement des scalers depuis : ./Pid_Model/scalers.joblib
@@ -36,6 +36,22 @@ INFO - [feature_engineering:97] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\
 INFO - [pid_tuner_main:266] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - État initial extrait avec succès ! La simulation est prête à démarrer.
 INFO - [pid_tuner_main:276] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Étape 3 : Lancement de l'algorithme d'optimisation (Test du solveur)...
 INFO - [pid_tuner_main:296] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Point de départ du solveur : Kp=0.95, Ti=1089.0, Td=0.0
-INFO - [pid_tuner_main:300] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Score au point de départ : 130.877656
-INFO - [pid_tuner_main:304] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Score avec test params [1.9, 544.5, 10.0] : 130.696397
-INFO - [pid_tuner_main:307] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Différence de score détectée : 0.181259
+INFO - [pid_tuner_main:300] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Score au point de départ : 125.501244
+INFO - [pid_tuner_main:304] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Score avec test params [1.9, 544.5, 10.0] : 125.501244
+INFO - [pid_tuner_main:307] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Différence de score détectée : 0.000000
+WARNING - [pid_tuner_main:310] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - ⚠️ ATTENTION: La fonction objectif semble insensible aux paramètres PID !
+WARNING - [pid_tuner_main:311] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py -   Causes possibles : sp_step_value_offset=0, modèle ML insensible, ou durée trop courte.
+INFO - [pid_tuner_main:72] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - --- Protocole sensibilité (10 essais PID) ---
+INFO - [pid_tuner_main:74] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 01 | Kp=0.950 Ti=1089.000 Td=0.000 | Score=125.501244
+INFO - [pid_tuner_main:74] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 02 | Kp=1.425 Ti=1089.000 Td=0.000 | Score=125.501244
+INFO - [pid_tuner_main:74] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 03 | Kp=0.665 Ti=1089.000 Td=0.000 | Score=125.501244
+INFO - [pid_tuner_main:74] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 04 | Kp=0.950 Ti=1000.000 Td=0.000 | Score=125.501244
+INFO - [pid_tuner_main:74] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 05 | Kp=0.950 Ti=762.300 Td=0.000 | Score=125.501244
+INFO - [pid_tuner_main:74] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 06 | Kp=0.950 Ti=1089.000 Td=5.000 | Score=125.501244
+INFO - [pid_tuner_main:74] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 07 | Kp=0.950 Ti=1089.000 Td=20.000 | Score=125.501244
+INFO - [pid_tuner_main:74] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 08 | Kp=0.100 Ti=1000.000 Td=0.000 | Score=125.501244
+INFO - [pid_tuner_main:74] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 09 | Kp=10.000 Ti=10.000 Td=100.000 | Score=125.501244
+INFO - [pid_tuner_main:74] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 10 | Kp=5.050 Ti=505.000 Td=50.000 | Score=125.501244
+INFO - [pid_tuner_main:77] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Spread score absolu: 0.000000 | Spread relatif: 0.00%
+WARNING - [pid_tuner_main:81] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Diagnostic: objectif peu sensible (surface plate). L'optimisation locale peut rester bloquée.
+INFO - [pid_tuner_main:324] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Lancement de l'optimisation L-BFGS-B...
