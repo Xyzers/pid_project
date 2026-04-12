@@ -1,7 +1,3 @@
-# pid_comparator_main.py
-#!/usr/bin/env python
-# coding: utf-8
-
 import sys
 import logging # logging est configuré par config_loader
 import pandas as pd
@@ -16,6 +12,57 @@ from src.pid_logic.pid_controller import PIDController
 from src.plotting_utils import plot_pid_comparison 
 
 logger = logging.getLogger(__name__) 
+
+def _simulate_pid_behavior(hist_data_df: pd.DataFrame, pid_simulator: PIDController, 
+                           fb_kp: float, fb_ti: float, fb_td: float, 
+                           pid_enable_col_name: str) -> None:
+    """
+    Exécute la boucle de simulation du PID sur la série temporelle historique.
+    Modifie le DataFrame sur place en y ajoutant 'MV_simulated' et 'PID_Active_simulated'.
+    """
+    sim_mv_list = []
+    sim_pid_active_list = [] 
+    
+    for timestamp, data_row in hist_data_df.iterrows():
+        pv_r = data_row['PV_real']
+        sp_r = data_row['SP_real']
+        mv_r = data_row['MV_real'] 
+        
+        if pd.isna(mv_r): 
+            logger.debug(f"MV_real est NaN à {timestamp}. Bumpless transfer peut être affecté si transition I->A.")
+
+        if pd.isna(pv_r) or pd.isna(sp_r):
+            logger.warning(f"PV ou SP NaN à {timestamp}. Le PID simulé maintiendra sa dernière MV et son état.")
+            sim_mv_list.append(pid_simulator.mv) 
+            sim_pid_active_list.append(pid_simulator.is_active)
+            if pid_simulator.previous_pv is None and not pd.isna(pv_r):
+                 pid_simulator.previous_pv = pv_r 
+            continue
+
+        pid_enabled_r_current = pid_simulator.is_active 
+        if pid_enable_col_name in data_row and not pd.isna(data_row[pid_enable_col_name]):
+            pid_enabled_r_current = bool(data_row[pid_enable_col_name])
+        elif pid_enable_col_name not in hist_data_df.columns: 
+             pid_enabled_r_current = True 
+
+        mv_for_bumpless = mv_r if not pd.isna(mv_r) else pid_simulator.last_active_mv 
+
+        if pid_simulator.is_active != pid_enabled_r_current:
+            pid_simulator.set_active_state(pid_enabled_r_current, sp_r, pv_r, mv_for_bumpless)
+
+        current_kp = data_row.get('Kp_real', fb_kp); current_kp = fb_kp if pd.isna(current_kp) else current_kp
+        current_ti_val = data_row.get('Ti_real', fb_ti); current_ti_val = fb_ti if pd.isna(current_ti_val) else current_ti_val
+        current_ti = current_ti_val if current_ti_val > 0 else fb_ti
+        current_td = data_row.get('Td_real', fb_td); current_td = fb_td if pd.isna(current_td) else current_td
+        
+        pid_simulator.set_parameters(current_kp, current_ti, current_td)
+        
+        sim_mv_output = pid_simulator.update(sp_r, pv_r)
+        sim_mv_list.append(sim_mv_output)
+        sim_pid_active_list.append(pid_simulator.is_active)
+
+    hist_data_df['MV_simulated'] = sim_mv_list
+    hist_data_df['PID_Active_simulated'] = sim_pid_active_list
 
 def run_pid_comparison():
     script_name_stem = "pid_comparator" 
@@ -131,56 +178,8 @@ def run_pid_comparison():
         # Log après que set_initial_state ait pu ajuster self.mv et self.is_active
         logger.info(f"PID simulé état après set_initial_state: Kp={pid_simulator.Kp_param:.2f}, Ti={pid_simulator.Ti_param:.2f}, Td={pid_simulator.Td_param:.2f}, MV_init={pid_simulator.mv:.2f}, Actif_init={pid_simulator.is_active}")
 
-        sim_mv_list = []
-        sim_pid_active_list = [] 
-        
-        # Bloc de débogage pour pid_enable_col_name (devrait maintenant fonctionner)
-        try:
-            logger.debug(f"Avant la boucle, pid_enable_col_name = '{pid_enable_col_name}'")
-        except NameError: # Ne devrait plus arriver
-            logger.error("ERREUR DE DÉBOGAGE INTERNE: pid_enable_col_name n'est PAS défini avant la boucle !")
-            
         logger.info(f"Simulation PID (Tsamp={tsamp_pid_s:.3f}s) avec {len(hist_data_df)} points...")
-        for timestamp, data_row in hist_data_df.iterrows():
-            pv_r = data_row['PV_real']
-            sp_r = data_row['SP_real']
-            mv_r = data_row['MV_real'] 
-            if pd.isna(mv_r): 
-                logger.debug(f"MV_real est NaN à {timestamp}. Bumpless transfer peut être affecté si transition I->A.")
-
-            if pd.isna(pv_r) or pd.isna(sp_r):
-                logger.warning(f"PV ou SP NaN à {timestamp}. Le PID simulé maintiendra sa dernière MV et son état.")
-                sim_mv_list.append(pid_simulator.mv) 
-                sim_pid_active_list.append(pid_simulator.is_active)
-                if pid_simulator.previous_pv is None and not pd.isna(pv_r):
-                     pid_simulator.previous_pv = pv_r 
-                continue
-
-            # Utilisation de pid_enable_col_name dans la boucle
-            pid_enabled_r_current = pid_simulator.is_active 
-            if pid_enable_col_name in data_row and not pd.isna(data_row[pid_enable_col_name]):
-                pid_enabled_r_current = bool(data_row[pid_enable_col_name])
-            elif pid_enable_col_name not in hist_data_df.columns: 
-                 pid_enabled_r_current = True # Ou pid_simulator.is_active si on veut garder l'état initial par défaut
-                                              # Le comportement actuel est de le forcer à True si la colonne n'existe pas du tout.
-
-            mv_for_bumpless = mv_r if not pd.isna(mv_r) else pid_simulator.last_active_mv 
-
-            if pid_simulator.is_active != pid_enabled_r_current:
-                pid_simulator.set_active_state(pid_enabled_r_current, sp_r, pv_r, mv_for_bumpless)
-
-            current_kp = data_row.get('Kp_real', fb_kp); current_kp = fb_kp if pd.isna(current_kp) else current_kp
-            current_ti_val = data_row.get('Ti_real', fb_ti); current_ti_val = fb_ti if pd.isna(current_ti_val) else current_ti_val
-            current_ti = current_ti_val if current_ti_val > 0 else fb_ti
-            current_td = data_row.get('Td_real', fb_td); current_td = fb_td if pd.isna(current_td) else current_td
-            pid_simulator.set_parameters(current_kp, current_ti, current_td)
-            
-            sim_mv_output = pid_simulator.update(sp_r, pv_r)
-            sim_mv_list.append(sim_mv_output)
-            sim_pid_active_list.append(pid_simulator.is_active)
-
-        hist_data_df['MV_simulated'] = sim_mv_list
-        hist_data_df['PID_Active_simulated'] = sim_pid_active_list
+        _simulate_pid_behavior(hist_data_df, pid_simulator, fb_kp, fb_ti, fb_td, pid_enable_col_name)
         
         logger.info("Simulation PID terminée.", extra={'important_phase': True})
 

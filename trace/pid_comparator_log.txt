@@ -1,32 +1,35 @@
-2025-06-02 18:17:07,692 - INFO - [config_loader:111] - C:\Jupyter\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Jupyter\pid_project\trace\pid_comparator_log.txt
-2025-06-02 18:17:07,692 - INFO - [config_loader:120] - C:\Jupyter\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Jupyter\pid_project\pid_comparator.ini'.
-2025-06-02 18:17:07,692 - INFO - [pid_comparator_main:31] - C:\Jupyter\pid_project\pid_comparator_main.py - --- Démarrage pid_comparator.py ---
-INFO - [db_utils:30] - C:\Jupyter\pid_project\src\db_utils.py - Connexion à SQL Server 'FRCDKSPA-0002/Runtime' avec l'utilisateur 'USE_Runtime'.
-INFO - [db_utils:44] - C:\Jupyter\pid_project\src\db_utils.py - Connexion à la base de données réussie et testée.
-INFO - [db_utils:61] - C:\Jupyter\pid_project\src\db_utils.py - Construction de la requête SQL...
-INFO - [db_utils:136] - C:\Jupyter\pid_project\src\db_utils.py - Requête SQL construite:
+2026-04-12 17:45:04,072 - INFO - [config_loader:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\trace\pid_comparator_log.txt
+2026-04-12 17:45:04,072 - INFO - [config_loader:120] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_comparator.ini'.
+2026-04-12 17:45:04,073 - INFO - [pid_comparator_main:78] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_comparator_main.py - --- Démarrage pid_comparator.py ---
+INFO - [db_utils:30] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Connexion à SQL Server 'FRCDKSPA-0002/Runtime' avec l'utilisateur 'USE_Runtime'.
+INFO - [db_utils:44] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Connexion à la base de données réussie et testée.
+INFO - [db_utils:61] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Construction de la requête SQL...
+INFO - [db_utils:136] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Requête SQL construite:
 
     SELECT DateTime, MAX(CASE WHEN TagName = 'N1N2_lt_4401' THEN Value END) AS PV_real,
         MAX(CASE WHEN TagName = 'N1N2_lIC_4401_out' THEN Value END) AS MV_real,
         MAX(CASE WHEN TagName = 'N1N2_lIC_4401_SP' THEN Value END) AS SP_real,
+        MAX(CASE WHEN TagName = 'N1N2_lIC_4401_KP' THEN Value END) AS Kp_real,
+        MAX(CASE WHEN TagName = 'N1N2_lIC_4401_TI' THEN Value END) AS Ti_real,
+        MAX(CASE WHEN TagName = 'N1N2_lIC_4401_TD' THEN Value END) AS Td_real,
         MAX(CASE WHEN TagName = 'ACOM_T_COM_XV_02_O' THEN Value END) AS PID_Enable_real
     FROM History
-    WHERE TagName IN ('N1N2_lt_4401', 'N1N2_lIC_4401_out', 'N1N2_lIC_4401_SP', 'ACOM_T_COM_XV_02_O')
-      AND DateTime >= '2025-05-31 17:20:0' AND DateTime <= '2025-05-31 18:16:00'
+    WHERE TagName IN ('N1N2_lt_4401', 'N1N2_lIC_4401_out', 'N1N2_lIC_4401_SP', 'N1N2_lIC_4401_KP', 'N1N2_lIC_4401_TI', 'N1N2_lIC_4401_TD', 'ACOM_T_COM_XV_02_O')
+      AND DateTime >= '2026-04-12 16:20:0' AND DateTime <= '2026-04-12 17:20:0'
       AND wwRetrievalMode = 'Cyclic' AND wwResolution = 100 AND wwVersion = 'Latest'
     GROUP BY DateTime
     ORDER BY DateTime ASC;
     
-INFO - [db_utils:143] - C:\Jupyter\pid_project\src\db_utils.py - Données extraites avec succès. Forme: (33601, 5)
-INFO - [data_processing:56] - C:\Jupyter\pid_project\src\data_processing.py - Pas de temps médian des données nettoyées: 0 days 00:00:00.100000
-INFO - [pid_comparator_main:78] - C:\Jupyter\pid_project\pid_comparator_main.py - Options de simulation PID lues depuis .ini: Structure='parallel_isa', Dérivée='on_error'
-INFO - [pid_comparator_main:114] - C:\Jupyter\pid_project\pid_comparator_main.py - État initial PID (depuis tag 'PID_Enable_real' sur première ligne): Inactif
-INFO - [pid_comparator_main:132] - C:\Jupyter\pid_project\pid_comparator_main.py - PID simulé état après set_initial_state: Kp=3.00, Ti=180.00, Td=0.00, MV_init=25.00, Actif_init=False
-INFO - [pid_comparator_main:143] - C:\Jupyter\pid_project\pid_comparator_main.py - Simulation PID (Tsamp=0.100s) avec 33601 points...
-INFO - [pid_controller:155] - C:\Jupyter\pid_project\src\pid_logic\pid_controller.py - PID Simulé: Inactif -> Actif. MV=24.030, I_term=11.880
-INFO - [pid_controller:160] - C:\Jupyter\pid_project\src\pid_logic\pid_controller.py - PID Simulé: Actif -> Inactif. MV gelée=18.449, I_term gelé=17.939
-2025-06-02 18:17:18,667 - INFO - [pid_comparator_main:185] - C:\Jupyter\pid_project\pid_comparator_main.py - Simulation PID terminée.
-INFO - [plotting_utils:123] - C:\Jupyter\pid_project\src\plotting_utils.py - Graphique de comparaison PID sauvegardé: 'C:\Jupyter\pid_project\trace\pid_comparison_plot.png'.
-INFO - [pid_comparator_main:195] - C:\Jupyter\pid_project\pid_comparator_main.py - Comparaison MV (globale, lignes avec MV_real et MV_sim non-NaN): MSE=0.0127, MAE=0.0536
-INFO - [pid_comparator_main:212] - C:\Jupyter\pid_project\pid_comparator_main.py - Moteur de base de données fermé.
-2025-06-02 18:17:22,165 - INFO - [pid_comparator_main:214] - C:\Jupyter\pid_project\pid_comparator_main.py - --- Fin pid_comparator.py ---
+INFO - [db_utils:143] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Données extraites avec succès. Forme: (36001, 8)
+INFO - [data_processing:56] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\data_processing.py - Pas de temps médian des données nettoyées: 0 days 00:00:00.100000
+INFO - [pid_comparator_main:125] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_comparator_main.py - Options de simulation PID lues depuis .ini: Structure='parallel_isa', Dérivée='on_error'
+INFO - [pid_comparator_main:161] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_comparator_main.py - État initial PID (depuis tag 'PID_Enable_real' sur première ligne): Inactif
+INFO - [pid_comparator_main:179] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_comparator_main.py - PID simulé état après set_initial_state: Kp=0.95, Ti=1089.00, Td=0.00, MV_init=4.57, Actif_init=False
+INFO - [pid_comparator_main:181] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_comparator_main.py - Simulation PID (Tsamp=0.100s) avec 36001 points...
+INFO - [pid_controller:155] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\pid_logic\pid_controller.py - PID Simulé: Inactif -> Actif. MV=4.980, I_term=6.035
+INFO - [pid_controller:160] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\pid_logic\pid_controller.py - PID Simulé: Actif -> Inactif. MV gelée=4.552, I_term gelé=5.777
+2026-04-12 17:45:16,168 - INFO - [pid_comparator_main:184] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_comparator_main.py - Simulation PID terminée.
+INFO - [plotting_utils:123] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\plotting_utils.py - Graphique de comparaison PID sauvegardé: 'C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\trace\pid_comparison_plot.png'.
+INFO - [pid_comparator_main:194] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_comparator_main.py - Comparaison MV (globale, lignes avec MV_real et MV_sim non-NaN): MSE=0.4297, MAE=0.5149
+INFO - [pid_comparator_main:211] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_comparator_main.py - Moteur de base de données fermé.
+2026-04-12 17:45:30,466 - INFO - [pid_comparator_main:213] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_comparator_main.py - --- Fin pid_comparator.py ---
