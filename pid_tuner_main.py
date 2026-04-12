@@ -33,6 +33,43 @@ from src.feature_engineering import create_lagged_features
 logger = logging.getLogger(__name__)
 
 
+def run_model_reactivity_check(process_model, scaler_X, scaler_y, initial_state_df):
+    """Vérifie si le modèle réagit aux variations des lags MV/SP/PV.
+
+    Ce test ne remplace pas l'optimisation, il sert uniquement de diagnostic
+    quand la surface de coût est plate.
+    """
+    base_features = initial_state_df.copy()
+    base_pred_scaled = process_model.predict(scaler_X.transform(base_features))[0]
+    base_pred = scaler_y.inverse_transform([[base_pred_scaled]])[0][0]
+
+    tests = [
+        ('MV_real_lag_1', 1.0),
+        ('SP_real_lag_1', 1.0),
+        ('PV_real_lag_1', 1.0),
+    ]
+
+    logger.info("--- Diagnostic réactivité modèle (perturbation 1 pas) ---")
+    logger.info(f"Prédiction de base PV: {base_pred:.6f}")
+
+    for col_name, delta in tests:
+        if col_name not in base_features.columns:
+            logger.warning(f"Colonne absente pour diagnostic: {col_name}")
+            continue
+
+        varied = base_features.copy()
+        varied[col_name] = varied[col_name] + delta
+        pred_scaled = process_model.predict(scaler_X.transform(varied))[0]
+        pred = scaler_y.inverse_transform([[pred_scaled]])[0][0]
+        effect = pred - base_pred
+
+        logger.info(
+            f"Test {col_name} +{delta:.3f} -> PV_pred={pred:.6f} (delta={effect:+.6f})"
+        )
+
+    logger.info("--- Fin diagnostic réactivité modèle ---")
+
+
 def run_pid_sensitivity_protocol(process_model, scaler_X, scaler_y, config, initial_state_df, initial_guess, bounds):
     """
     Protocole terrain: évalue une grille de 10 jeux PID pour vérifier
@@ -264,6 +301,9 @@ def run_pid_tuner():
         # On isole la TOUTE DERNIÈRE ligne extraite, c'est notre point de départ "Présent" !
         initial_state_df = X.iloc[-1:].copy()
         logger.info("État initial extrait avec succès ! La simulation est prête à démarrer.")
+
+        # Diagnostic rapide: vérifier si le modèle ML réagit aux entrées MV/SP.
+        run_model_reactivity_check(process_model, scaler_X, scaler_y, initial_state_df)
         
     except Exception as e:
         print(f"\n❌ ERREUR RÉELLE DÉTECTÉE LORS DE L'ÉTAPE 2 : {e}\n", file=sys.stderr)
@@ -319,6 +359,22 @@ def run_pid_tuner():
         initial_guess,
         bounds,
     )
+
+    if not is_sensitive:
+        best_trial = min(scored_trials, key=lambda t: t[2])
+        _, best_params, best_score = best_trial
+        logger.warning("Objectif trop plat: optimisation numerique ignoree pour eviter un faux optimum.")
+        logger.info("Etape 4 : Affichage des parametres optimaux (issus du protocole sensibilité)...")
+        logger.info("==================================================")
+        logger.info("Diagnostic: optimisation sautee (surface de cout quasi constante).")
+        logger.info("==================================================")
+        logger.info(f"Kp retenu : {best_params[0]:.3f}")
+        logger.info(f"Ti retenu : {best_params[1]:.3f} secondes")
+        logger.info(f"Td retenu : {best_params[2]:.3f} secondes")
+        logger.info(f"Score retenu : {best_score:.6f}")
+        logger.info("Action recommandee: enrichir les donnees d'entrainement et relancer le model builder.")
+        logger.info("==================================================")
+        return
     
     # Lancement du solveur (L-BFGS-B pour l'optimisation locale avec bornes)
     logger.info("Lancement de l'optimisation L-BFGS-B...")
@@ -332,8 +388,7 @@ def run_pid_tuner():
             'ftol': 1e-8,
             'gtol': 1e-7,
             'maxiter': 200,
-            'maxfun': 500,
-            'disp': True
+            'maxfun': 500
         }
     )
 

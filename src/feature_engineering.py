@@ -15,8 +15,13 @@ def create_lagged_features(df: pd.DataFrame, config_features: configparser.Secti
         logger.error(f"Colonne cible '{target_col}' non trouvée dans le DataFrame.")
         raise KeyError(f"Colonne cible '{target_col}' non trouvée dans le DataFrame '{list(lagged_df.columns)}'.")
     
-    # La colonne 'target_PV' est créée pour stocker la cible y avant que les lignes avec NaN ne soient supprimées
-    lagged_df['target_PV_column_for_y'] = lagged_df[target_col] # Nom plus explicite
+    # Cible à horizon configurable: 1 = prédiction à t+1 (comportement historique),
+    # >1 force le modèle à regarder davantage MV/SP et moins la simple inertie PV.
+    target_horizon_steps = config_features.getint('target_horizon_steps', 1)
+    if target_horizon_steps < 1:
+        logger.warning("target_horizon_steps < 1 détecté. Forçage à 1.")
+        target_horizon_steps = 1
+    lagged_df['target_PV_column_for_y'] = lagged_df[target_col].shift(-target_horizon_steps)
     
     feature_cols = []
     
@@ -73,8 +78,11 @@ def create_lagged_features(df: pd.DataFrame, config_features: configparser.Secti
     # DropNA basé sur les colonnes de features créées. Si feature_cols est vide, cela ne fait rien.
     # Et aussi sur la colonne cible pour s'assurer que y n'a pas de NaN si elle provenait d'un shift aussi (non applicable ici car y = target_col non shiftée)
     # Mais la création des lags introduit des NaN au début des colonnes de features.
-    if feature_cols: # Seulement si des features ont été créées (et donc des NaNs potentiellement introduits)
-        lagged_df.dropna(subset=feature_cols, inplace=True)
+    dropna_subset = []
+    if feature_cols:
+        dropna_subset.extend(feature_cols)
+    dropna_subset.append('target_PV_column_for_y')
+    lagged_df.dropna(subset=dropna_subset, inplace=True)
     
     rows_dropped = initial_rows - len(lagged_df)
     if rows_dropped > 0:
@@ -87,7 +95,10 @@ def create_lagged_features(df: pd.DataFrame, config_features: configparser.Secti
     X = lagged_df[feature_cols] if feature_cols else pd.DataFrame(index=lagged_df.index) # Retourner un DF vide avec le bon index si pas de features
     y = lagged_df['target_PV_column_for_y'] # Utiliser la colonne cible sauvegardée
     
-    logger.info(f"Features (X) shape: {X.shape}, Target (y) shape: {y.shape}")
+    logger.info(
+        f"Features (X) shape: {X.shape}, Target (y) shape: {y.shape}, "
+        f"horizon cible: {target_horizon_steps} pas"
+    )
     if X.empty and feature_cols: # Si feature_cols n'était pas vide mais X l'est (après dropna)
         logger.error("X est vide bien que des features étaient attendues. "
                      "Cela peut arriver si tous les échantillons ont été supprimés par dropna.")

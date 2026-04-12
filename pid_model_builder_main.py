@@ -84,6 +84,25 @@ def run_pipeline():
         if clean_df.empty:
             logger.error("Données vides après pré-traitement. Arrêt.")
             sys.exit(1)
+
+        # Préflight terrain: vérifier que MV/SP bougent assez pour apprendre une dynamique pilotable.
+        for signal_col in ['PV_real', 'MV_real', 'SP_real']:
+            if signal_col in clean_df.columns:
+                s = clean_df[signal_col].dropna()
+                if s.empty:
+                    logger.warning(f"Signal {signal_col} vide après nettoyage.")
+                    continue
+                amplitude = float(s.max() - s.min())
+                std_val = float(s.std())
+                logger.info(
+                    f"Excitation {signal_col}: min={s.min():.6f}, max={s.max():.6f}, "
+                    f"amplitude={amplitude:.6f}, std={std_val:.6f}"
+                )
+                if std_val < 1e-6:
+                    logger.warning(
+                        f"Signal {signal_col} quasi constant (std~0). "
+                        "Le modèle risque d'ignorer cette variable."
+                    )
         
         # Logguer les statistiques descriptives pour Kp_hist, Ti_hist, Td_hist si présentes
         for col_hist_param in ['Kp_hist', 'Ti_hist', 'Td_hist']:
@@ -122,6 +141,47 @@ def run_pipeline():
             sys.exit(1)
 
         model = train_model(X_train_s, y_train_s, config['ModelParams'])
+
+        # Diagnostic d'apprentissage: importance des familles de features.
+        if hasattr(model, 'feature_importances_') and len(X_train.columns) == len(model.feature_importances_):
+            feature_importances = list(zip(X_train.columns.tolist(), model.feature_importances_))
+            feature_importances.sort(key=lambda x: x[1], reverse=True)
+
+            family_weights = {
+                'PV': 0.0,
+                'MV': 0.0,
+                'SP': 0.0,
+                'Dist': 0.0,
+                'Other': 0.0,
+            }
+            for feat_name, weight in feature_importances:
+                if feat_name.startswith('PV_real_lag_'):
+                    family_weights['PV'] += float(weight)
+                elif feat_name.startswith('MV_real_lag_'):
+                    family_weights['MV'] += float(weight)
+                elif feat_name.startswith('SP_real_lag_'):
+                    family_weights['SP'] += float(weight)
+                elif feat_name.startswith('Dist'):
+                    family_weights['Dist'] += float(weight)
+                else:
+                    family_weights['Other'] += float(weight)
+
+            logger.info(
+                "Importance familles features: "
+                f"PV={family_weights['PV']:.4f}, MV={family_weights['MV']:.4f}, "
+                f"SP={family_weights['SP']:.4f}, Dist={family_weights['Dist']:.4f}, "
+                f"Other={family_weights['Other']:.4f}"
+            )
+
+            top_k = min(12, len(feature_importances))
+            logger.info("Top features importance (max 12):")
+            for rank, (feat_name, weight) in enumerate(feature_importances[:top_k], start=1):
+                logger.info(f"  {rank:02d}. {feat_name}: {weight:.6f}")
+
+            if family_weights['MV'] < 0.02 and family_weights['SP'] < 0.02:
+                logger.warning(
+                    "MV/SP ont une importance tres faible. Le tuner PID risque d'avoir une surface de cout plate."
+                )
         
         _, _, _, predictions_df = evaluate_model(model, X_test_s, y_test_original_series.values, scaler_y_obj, y_test_index_for_plot_and_df)
         

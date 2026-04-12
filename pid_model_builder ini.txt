@@ -31,8 +31,8 @@ ww_resolution_ms = 100
 
 [ModelFeatures]
 # Number of past time steps (lags) to use for each feature.
-pv_lags = 10
-mv_lags = 10
+pv_lags = 300
+mv_lags = 
 sp_lags = 10
 
 # Lags for optional features (set to 0 if tag is not used or no lags desired for it)
