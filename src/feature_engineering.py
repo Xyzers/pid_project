@@ -21,13 +21,15 @@ def create_lagged_features(df: pd.DataFrame, config_features: configparser.Secti
     feature_cols = []
     
     # UTILISER LES NOMS DE COLONNES AVEC LE SUFFIXE _real
+    # IMPORTANT : Les alias ici doivent correspondre exactement à ceux générés par
+    # db_utils.build_sql_query() → 'PV_real', 'MV_real', 'SP_real', 'Kp_real', 'Ti_real', 'Td_real'
     base_features_lags_config = {
         'PV_real': config_features.getint('pv_lags', 0),
         'MV_real': config_features.getint('mv_lags', 0),
         'SP_real': config_features.getint('sp_lags', 0),
-        'Kp_hist': config_features.getint('kp_hist_lags', 0), # Garder Kp_hist, etc. si ces alias sont utilisés directement
-        'Ti_hist': config_features.getint('ti_hist_lags', 0),
-        'Td_hist': config_features.getint('td_hist_lags', 0)
+        'Kp_real': config_features.getint('kp_hist_lags', 0),
+        'Ti_real': config_features.getint('ti_hist_lags', 0),
+        'Td_real': config_features.getint('td_hist_lags', 0)
     }
 
     # Gestion des tags de perturbation

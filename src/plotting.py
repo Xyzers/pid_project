@@ -35,4 +35,3 @@ def plot_predictions(predictions_df: pd.DataFrame, plot_save_path: Path = None):
         plt.show()
     except Exception as e:
         logger.warning(f"Impossible d'afficher graphique (plt.show()): {e}.")
-    # ...

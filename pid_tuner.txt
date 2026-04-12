@@ -1,0 +1,41 @@
+2026-04-12 20:34:18,529 - INFO - [config_loader:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner.txt
+2026-04-12 20:34:18,530 - INFO - [config_loader:120] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner.ini'.
+2026-04-12 20:34:18,530 - INFO - [pid_tuner_main:212] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - --- Démarrage pid_tuner_main.py (Tuner PID) ---
+INFO - [pid_tuner_main:214] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Étape 1 : Chargement du Modèle de Procédé (Machine Learning)...
+INFO - [pid_tuner_main:219] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Tentative de chargement du modèle depuis : ./Pid_Model/trained.joblib
+INFO - [pid_tuner_main:222] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Tentative de chargement des scalers depuis : ./Pid_Model/scalers.joblib
+INFO - [pid_tuner_main:227] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Modèle ML et scalers chargés avec succès !
+INFO - [pid_tuner_main:232] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Étape 2 : Connexion à la base de données et extraction de l'état initial...
+INFO - [db_utils:30] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Connexion à SQL Server 'FRCDKSPA-0002/Runtime' avec l'utilisateur 'USE_Runtime'.
+INFO - [db_utils:44] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Connexion à la base de données réussie et testée.
+INFO - [db_utils:59] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Construction de la requête SQL...
+INFO - [db_utils:134] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Requête SQL construite:
+
+    SELECT DateTime, MAX(CASE WHEN TagName = 'N1N2_lt_4401' THEN Value END) AS PV_real,
+        MAX(CASE WHEN TagName = 'N1N2_lIC_4401_out' THEN Value END) AS MV_real,
+        MAX(CASE WHEN TagName = 'N1N2_lIC_4401_SP' THEN Value END) AS SP_real,
+        MAX(CASE WHEN TagName = 'N1N2_XV4422_zso' THEN Value END) AS Dist1_real,
+        MAX(CASE WHEN TagName = 'ACOM_T_COM_XV_02_O' THEN Value END) AS Dist2_real
+    FROM History
+    WHERE TagName IN ('N1N2_lt_4401', 'N1N2_lIC_4401_out', 'N1N2_lIC_4401_SP', 'N1N2_XV4422_zso', 'ACOM_T_COM_XV_02_O')
+      AND DateTime >= '2026-04-12 16:20:0' AND DateTime <= '2026-04-12 17:20:0'
+      AND wwRetrievalMode = 'Cyclic' AND wwResolution = 100 AND wwVersion = 'Latest'
+    GROUP BY DateTime
+    ORDER BY DateTime ASC;
+    
+INFO - [db_utils:141] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Données extraites avec succès. Forme: (36001, 6)
+INFO - [data_processing:56] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\data_processing.py - Pas de temps médian des données nettoyées: 0 days 00:00:00.100000
+INFO - [feature_engineering:64] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\feature_engineering.py - Création de 10 lag(s) pour PV_real.
+INFO - [feature_engineering:64] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\feature_engineering.py - Création de 10 lag(s) pour MV_real.
+INFO - [feature_engineering:64] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\feature_engineering.py - Création de 10 lag(s) pour SP_real.
+INFO - [feature_engineering:64] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\feature_engineering.py - Création de 10 lag(s) pour Dist1_real.
+INFO - [feature_engineering:64] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\feature_engineering.py - Création de 10 lag(s) pour Dist2_real.
+INFO - [feature_engineering:81] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\feature_engineering.py - 10 lignes supprimées après création des lags (NaNs dus aux shifts).
+INFO - [feature_engineering:90] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\feature_engineering.py - Features (X) shape: (35991, 50), Target (y) shape: (35991,)
+INFO - [feature_engineering:97] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\feature_engineering.py - Colonnes des features finales: ['PV_real_lag_1', 'PV_real_lag_2', 'PV_real_lag_3', 'PV_real_lag_4', 'PV_real_lag_5', 'PV_real_lag_6', 'PV_real_lag_7', 'PV_real_lag_8', 'PV_real_lag_9', 'PV_real_lag_10', 'MV_real_lag_1', 'MV_real_lag_2', 'MV_real_lag_3', 'MV_real_lag_4', 'MV_real_lag_5', 'MV_real_lag_6', 'MV_real_lag_7', 'MV_real_lag_8', 'MV_real_lag_9', 'MV_real_lag_10', 'SP_real_lag_1', 'SP_real_lag_2', 'SP_real_lag_3', 'SP_real_lag_4', 'SP_real_lag_5', 'SP_real_lag_6', 'SP_real_lag_7', 'SP_real_lag_8', 'SP_real_lag_9', 'SP_real_lag_10', 'Dist1_real_lag_1', 'Dist1_real_lag_2', 'Dist1_real_lag_3', 'Dist1_real_lag_4', 'Dist1_real_lag_5', 'Dist1_real_lag_6', 'Dist1_real_lag_7', 'Dist1_real_lag_8', 'Dist1_real_lag_9', 'Dist1_real_lag_10', 'Dist2_real_lag_1', 'Dist2_real_lag_2', 'Dist2_real_lag_3', 'Dist2_real_lag_4', 'Dist2_real_lag_5', 'Dist2_real_lag_6', 'Dist2_real_lag_7', 'Dist2_real_lag_8', 'Dist2_real_lag_9', 'Dist2_real_lag_10']
+INFO - [pid_tuner_main:266] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - État initial extrait avec succès ! La simulation est prête à démarrer.
+INFO - [pid_tuner_main:276] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Étape 3 : Lancement de l'algorithme d'optimisation (Test du solveur)...
+INFO - [pid_tuner_main:296] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Point de départ du solveur : Kp=0.95, Ti=1089.0, Td=0.0
+INFO - [pid_tuner_main:300] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Score au point de départ : 130.877656
+INFO - [pid_tuner_main:304] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Score avec test params [1.9, 544.5, 10.0] : 130.696397
+INFO - [pid_tuner_main:307] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Différence de score détectée : 0.181259

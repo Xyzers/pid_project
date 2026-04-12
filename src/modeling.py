@@ -38,8 +38,6 @@ def train_model(X_train_scaled, y_train_scaled, config_model_params: dict):
 
     model.fit(X_train_scaled, y_train_scaled)
     logger.info("Entraînement du modèle terminé.")
-    return model    
-    # ...
     return model
 
 def evaluate_model(model, X_test_scaled, y_test_original, scaler_y, y_test_index):
@@ -78,8 +76,6 @@ def evaluate_model(model, X_test_scaled, y_test_original, scaler_y, y_test_index
         predictions_df = pd.DataFrame({'Actual_PV': y_test_original, 'Predicted_PV': y_pred_descaled})
 
     return rmse, r2, mae, predictions_df
-    # ...
-    return rmse, r2, mae, predictions_df
 
 def save_model_and_scalers(model, scaler_X, scaler_y, config_output: dict):
     # ... (votre code pour save_model_and_scalers)
@@ -110,7 +106,7 @@ def save_model_and_scalers(model, scaler_X, scaler_y, config_output: dict):
 
 def load_model_and_scalers(config_output: dict):
     # ... (votre code pour load_model_and_scalers)
-    print(f"DEBUG_MODELING: config_output reçu: {config_output}")
+    logger.debug(f"config_output reçu: {dict(config_output) if hasattr(config_output, 'items') else config_output}")
     model_path_str = config_output.get('model_save_path')
     scalers_path_str = config_output.get('scalers_save_path')
 
@@ -133,6 +129,4 @@ def load_model_and_scalers(config_output: dict):
     scaler_X = scalers_dict['scaler_X']
     scaler_y = scalers_dict['scaler_y']
     logger.info(f"Modèle et scalers chargés de '{model_path}' et '{scalers_path}'.")
-    return model, scaler_X, scaler_y
-    # ...
     return model, scaler_X, scaler_y

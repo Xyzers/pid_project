@@ -1,0 +1,22 @@
+2026-04-12 20:42:31,579 - INFO - [config_loader:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\config_loader.py - Journalisation configurée. Logs également sauvegardés dans : C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\trace\pid_model_builder_log.txt
+2026-04-12 20:42:31,580 - INFO - [config_loader:120] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\config_loader.py - Configuration chargée depuis 'C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_model_builder.ini'.
+INFO - [pid_model_builder_main:53] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_model_builder_main.py - --- Démarrage du script (fichier exécuté: pid_model_builder_main.py) ---
+INFO - [pid_model_builder_main:56] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_model_builder_main.py - --- Utilisation du nom de base 'pid_model_builder' pour le fichier de configuration .ini ---
+INFO - [pid_model_builder_main:59] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_model_builder_main.py - --- Démarrage de la phase de création de modèle de procédé ---
+INFO - [db_utils:30] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Connexion à SQL Server 'FRCDKSPA-0002/Runtime' avec l'utilisateur 'USE_Runtime'.
+INFO - [db_utils:44] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Connexion à la base de données réussie et testée.
+INFO - [db_utils:59] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Construction de la requête SQL...
+INFO - [db_utils:134] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\src\db_utils.py - Requête SQL construite:
+
+    SELECT DateTime, MAX(CASE WHEN TagName = 'N1N2_lt_4401' THEN Value END) AS PV_real,
+        MAX(CASE WHEN TagName = 'N1N2_lIC_4401_out' THEN Value END) AS MV_real,
+        MAX(CASE WHEN TagName = 'N1N2_lIC_4401_SP' THEN Value END) AS SP_real,
+        MAX(CASE WHEN TagName = 'ACOM_T_COM_XV_02_O' THEN Value END) AS Dist1_real,
+        MAX(CASE WHEN TagName = 'N1N2_XV4422_zso' THEN Value END) AS Dist2_real
+    FROM History
+    WHERE TagName IN ('N1N2_lt_4401', 'N1N2_lIC_4401_out', 'N1N2_lIC_4401_SP', 'ACOM_T_COM_XV_02_O', 'N1N2_XV4422_zso')
+      AND DateTime >= '2026-04-09 16:20:0' AND DateTime <= '2026-04-12 17:20:0'
+      AND wwRetrievalMode = 'Cyclic' AND wwResolution = 100 AND wwVersion = 'Latest'
+    GROUP BY DateTime
+    ORDER BY DateTime ASC;
+    

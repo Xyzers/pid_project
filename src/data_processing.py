@@ -92,8 +92,6 @@ def split_data_chronological(X: pd.DataFrame, y: pd.Series, train_ratio: float, 
          logger.warning("Ensemble de test vide malgré calculs indiquant données.")
 
     return X_train, X_val, X_test, y_train, y_val, y_test
-    # ...
-    return X_train, X_val, X_test, y_train, y_val, y_test
 
 def scale_data(X_train, X_val, X_test, y_train, y_val, y_test, scaler_type='MinMaxScaler'):
     # ... (votre code pour scale_data)
@@ -132,6 +130,4 @@ def scale_data(X_train, X_val, X_test, y_train, y_val, y_test, scaler_type='MinM
     logger.info(f"Données mises à l'échelle avec {scaler_X.__class__.__name__}.")
     return X_train_scaled, X_val_scaled, X_test_scaled, \
            y_train_scaled.ravel(), y_val_scaled.ravel(), y_test_scaled.ravel(), \
-           scaler_X, scaler_y    
-    # ...
-    return X_train_scaled, X_val_scaled, X_test_scaled, y_train_scaled.ravel(), y_val_scaled.ravel(), y_test_scaled.ravel(), scaler_X, scaler_y
+           scaler_X, scaler_y

@@ -50,8 +50,6 @@ def get_db_engine(config_db):
         else:
             logger.error(f"Les paramètres de connexion étaient: {conn_str_params}")
         raise
-    # ...
-    return engine
 
 def build_sql_query(config_tags, config_period, table_name, required_tags_aliases=None):
     """
@@ -147,5 +145,3 @@ def extract_data(engine, query):
     except Exception as e:
         logger.error(f"Erreur lors de l'extraction des données: {e}")
         raise
-    # ...
-    return df
