@@ -59,9 +59,9 @@ def load_config_and_setup_logging(script_stem_for_config_file: str, config_file_
     console_fmt_with_time = '%(asctime)s - %(levelname)s - [%(module)s] - %(message)s'
     file_fmt_with_time = '%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d] - %(pathname)s - %(message)s'
     
-    # Format SANS timestamp pour les logs par défaut (pour réduire la "pollution")
-    console_fmt_no_time = '%(levelname)s - [%(module)s] - %(message)s'
-    file_fmt_no_time = '%(levelname)s - [%(module)s:%(lineno)d] - %(pathname)s - %(message)s'
+    # Format avec timestamp pour tous les logs (terminal + fichier)
+    console_fmt_no_time = '%(asctime)s - %(levelname)s - [%(module)s] - %(message)s'
+    file_fmt_no_time = '%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d] - %(pathname)s - %(message)s'
 
     # Handler pour la console (stdout)
     console_handler = logging.StreamHandler(sys.stdout)
