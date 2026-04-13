@@ -5,6 +5,7 @@ import sys
 import logging # Sera initialisé plus tard
 import configparser
 import time
+import winsound
 from pathlib import Path
 
 # Vérification de base du dossier 'src'
@@ -408,27 +409,55 @@ def run_pid_tuner():
         logger.info("==================================================")
         return
     
-    # Lancement du solveur (L-BFGS-B pour l'optimisation locale avec bornes)
-    logger.info("Lancement de l'optimisation L-BFGS-B...")
+    # Lancement du solveur local (L-BFGS-B) en multi-start pour éviter les minima locaux.
+    logger.info("Lancement de l'optimisation L-BFGS-B (multi-start)...")
     lbfgs_maxiter = optimizer_cfg.getint('lbfgs_maxiter', 80) if optimizer_cfg else 80
     lbfgs_maxfun = optimizer_cfg.getint('lbfgs_maxfun', 250) if optimizer_cfg else 250
+    lbfgs_restarts = optimizer_cfg.getint('lbfgs_restarts', 4) if optimizer_cfg else 4
 
-    result = minimize(
-        evaluate_closed_loop_performance, 
-        initial_guess, 
-        args=(process_model, scaler_X, scaler_y, config, initial_state_df),
-        bounds=bounds, 
-        method='L-BFGS-B',
-        options={
-            'ftol': 1e-8,
-            'gtol': 1e-7,
-            'maxiter': lbfgs_maxiter,
-            'maxfun': lbfgs_maxfun
-        }
+    # Construire les points de départ: guess initial + meilleurs essais protocole.
+    sorted_trials = sorted(scored_trials, key=lambda t: t[2])
+    start_points = [initial_guess]
+    for _, p, _ in sorted_trials:
+        p_clipped = _clip_params_to_bounds(p, bounds)
+        if p_clipped not in start_points:
+            start_points.append(p_clipped)
+        if len(start_points) >= max(1, lbfgs_restarts):
+            break
+
+    candidate_results = []
+    for idx, start_pt in enumerate(start_points, start=1):
+        logger.info(
+            f"L-BFGS-B start {idx}/{len(start_points)}: "
+            f"Kp={start_pt[0]:.3f}, Ti={start_pt[1]:.3f}, Td={start_pt[2]:.3f}"
+        )
+        res_i = minimize(
+            evaluate_closed_loop_performance,
+            start_pt,
+            args=(process_model, scaler_X, scaler_y, config, initial_state_df),
+            bounds=bounds,
+            method='L-BFGS-B',
+            options={
+                'ftol': 1e-8,
+                'gtol': 1e-7,
+                'maxiter': lbfgs_maxiter,
+                'maxfun': lbfgs_maxfun,
+            }
+        )
+        logger.info(
+            f"L-BFGS-B result {idx}: score={res_i.fun:.6f}, nit={getattr(res_i, 'nit', 0)}, nfev={getattr(res_i, 'nfev', 0)}"
+        )
+        candidate_results.append(res_i)
+
+    result = min(candidate_results, key=lambda r: r.fun)
+    logger.info(
+        f"Meilleur L-BFGS-B multi-start: score={result.fun:.6f}, "
+        f"Kp={result.x[0]:.3f}, Ti={result.x[1]:.3f}, Td={result.x[2]:.3f}"
     )
 
-    # Filet de sécurité: si L-BFGS-B n'explore pas (nit=0), on peut tenter un solveur global.
-    if result.nit == 0:
+    # Filet de sécurité: si L-BFGS-B reste peu concluant, on peut tenter un solveur global.
+    de_always_refine = optimizer_cfg.getboolean('de_always_refine', False) if optimizer_cfg else False
+    if (getattr(result, 'nit', 0) <= 1) or de_always_refine:
         optimizer_cfg = config['OPTIMIZER'] if config.has_section('OPTIMIZER') else None
         de_enabled = optimizer_cfg.getboolean('de_enabled', True) if optimizer_cfg else True
         de_force_if_flat = optimizer_cfg.getboolean('de_force_if_flat', False) if optimizer_cfg else False
@@ -442,7 +471,7 @@ def run_pid_tuner():
         elif (not is_sensitive) and (not de_force_if_flat):
             logger.warning("Objectif peu sensible: DE ignoré (de_force_if_flat=false) pour éviter un run trop long.")
         else:
-            logger.warning("L-BFGS-B n'a pas itéré (nit=0). Tentative d'optimisation globale (differential_evolution)...")
+            logger.warning("L-BFGS-B peu concluant. Tentative d'optimisation globale (differential_evolution)...")
             logger.info(
                 f"DE config: maxiter={de_maxiter}, popsize={de_popsize}, polish={de_polish}, "
                 f"max_runtime={de_max_runtime_s}s, workers=-1"
@@ -519,4 +548,14 @@ def run_pid_tuner():
     logger.info("=="*25)
 
 if __name__ == "__main__":
-    run_pid_tuner()
+    try:
+        run_pid_tuner()
+    finally:
+        try:
+            winsound.Beep(1000, 500)
+        except ImportError:
+            logger.info("Module winsound non trouvé, pas de bip de fin.")
+        except RuntimeError:
+            logger.info("Impossible de jouer le son de fin (pas de périphérique audio ou winsound non dispo).")
+        except Exception as e_sound:
+            logger.warning(f"Erreur lors de la tentative de jouer le son de fin: {e_sound}")

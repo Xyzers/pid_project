@@ -58,6 +58,8 @@ def create_lagged_features(df: pd.DataFrame, config_features: configparser.Secti
             # Arrêter si la clé de configuration de lag n'est plus trouvée (ex: pas de disturbance_3_lags)
             break 
             
+    lag_columns_dict = {}
+
     for col_name_from_config, num_lags in base_features_lags_config.items():
         # col_name_from_config est maintenant par ex. 'PV_real', 'Dist1_real'
         if col_name_from_config not in lagged_df.columns:
@@ -69,9 +71,13 @@ def create_lagged_features(df: pd.DataFrame, config_features: configparser.Secti
             logger.info(f"Création de {num_lags} lag(s) pour {col_name_from_config}.")
             for lag_idx in range(1, num_lags + 1):
                 lagged_col_name = f'{col_name_from_config}_lag_{lag_idx}' # Ex: PV_real_lag_1
-                lagged_df[lagged_col_name] = lagged_df[col_name_from_config].shift(lag_idx)
+                lag_columns_dict[lagged_col_name] = lagged_df[col_name_from_config].shift(lag_idx)
                 feature_cols.append(lagged_col_name)
         # else: logger.info(f"Aucun lag configuré pour {col_name_from_config}.") # Optionnel: log pour 0 lags
+
+    if lag_columns_dict:
+        lag_columns_df = pd.DataFrame(lag_columns_dict, index=lagged_df.index)
+        lagged_df = pd.concat([lagged_df, lag_columns_df], axis=1)
 
     # On ne supprime les NaN qu'APRÈS avoir créé toutes les colonnes de lags
     initial_rows = len(lagged_df)
