@@ -33,6 +33,13 @@ from src.feature_engineering import create_lagged_features
 logger = logging.getLogger(__name__)
 
 
+def _clip_params_to_bounds(params, bounds):
+    clipped = []
+    for val, (vmin, vmax) in zip(params, bounds):
+        clipped.append(max(vmin, min(vmax, val)))
+    return clipped
+
+
 def run_model_reactivity_check(process_model, scaler_X, scaler_y, initial_state_df):
     """Vérifie si le modèle réagit aux variations des lags MV/SP/PV.
 
@@ -96,7 +103,13 @@ def run_pid_sensitivity_protocol(process_model, scaler_X, scaler_y, config, init
     ]
 
     scored_trials = []
+    seen = set()
     for idx, params in enumerate(trial_params, start=1):
+        params = _clip_params_to_bounds(params, bounds)
+        key = (round(params[0], 8), round(params[1], 8), round(params[2], 8))
+        if key in seen:
+            continue
+        seen.add(key)
         score = evaluate_closed_loop_performance(params, process_model, scaler_X, scaler_y, config, initial_state_df)
         scored_trials.append((idx, params, score))
 
@@ -320,8 +333,16 @@ def run_pid_tuner():
         logger.error("ERREUR CRITIQUE: 'scipy' n'est pas installé. Tapez 'pip install scipy' dans le terminal.")
         sys.exit(1)
         
-    # Limites de recherche (Bounds) : (Kp_min, Kp_max), (Ti_min, Ti_max), (Td_min, Td_max)
-    bounds = ((0.1, 10.0), (10.0, 1000.0), (0.0, 100.0))
+    optimizer_cfg = config['OPTIMIZER'] if config.has_section('OPTIMIZER') else None
+
+    # Limites de recherche (Bounds) configurables via [OPTIMIZER]
+    kp_min = optimizer_cfg.getfloat('kp_min', 0.1) if optimizer_cfg else 0.1
+    kp_max = optimizer_cfg.getfloat('kp_max', 10.0) if optimizer_cfg else 10.0
+    ti_min = optimizer_cfg.getfloat('ti_min', 10.0) if optimizer_cfg else 10.0
+    ti_max = optimizer_cfg.getfloat('ti_max', 2000.0) if optimizer_cfg else 2000.0
+    td_min = optimizer_cfg.getfloat('td_min', 0.0) if optimizer_cfg else 0.0
+    td_max = optimizer_cfg.getfloat('td_max', 100.0) if optimizer_cfg else 100.0
+    bounds = ((kp_min, kp_max), (ti_min, ti_max), (td_min, td_max))
     
     # Point de départ : utiliser les valeurs du test PID s'il existe, sinon valeurs raisonnables
     if config.has_section('PID_PARAMS_TEST'):
@@ -333,6 +354,17 @@ def run_pid_tuner():
     else:
         initial_guess = [1.0, 500.0, 0.0]
     
+    original_guess = initial_guess[:]
+    initial_guess = _clip_params_to_bounds(initial_guess, bounds)
+    if initial_guess != original_guess:
+        logger.warning(
+            "Point de depart hors bornes detecte. "
+            f"Original={original_guess} -> Borne={initial_guess}"
+        )
+
+    logger.info(
+        f"Bornes solveur: Kp[{kp_min}, {kp_max}], Ti[{ti_min}, {ti_max}], Td[{td_min}, {td_max}]"
+    )
     logger.info(f"Point de départ du solveur : Kp={initial_guess[0]}, Ti={initial_guess[1]}, Td={initial_guess[2]}")
     
     # Diagnostic rapide : vérifier que la fonction objective est sensible aux paramètres PID
@@ -378,6 +410,9 @@ def run_pid_tuner():
     
     # Lancement du solveur (L-BFGS-B pour l'optimisation locale avec bornes)
     logger.info("Lancement de l'optimisation L-BFGS-B...")
+    lbfgs_maxiter = optimizer_cfg.getint('lbfgs_maxiter', 80) if optimizer_cfg else 80
+    lbfgs_maxfun = optimizer_cfg.getint('lbfgs_maxfun', 250) if optimizer_cfg else 250
+
     result = minimize(
         evaluate_closed_loop_performance, 
         initial_guess, 
@@ -387,8 +422,8 @@ def run_pid_tuner():
         options={
             'ftol': 1e-8,
             'gtol': 1e-7,
-            'maxiter': 200,
-            'maxfun': 500
+            'maxiter': lbfgs_maxiter,
+            'maxfun': lbfgs_maxfun
         }
     )
 
@@ -446,6 +481,27 @@ def run_pid_tuner():
             elif not is_sensitive:
                 logger.warning("Même le solveur global n'apporte pas mieux: la fonction objectif est probablement trop plate.")
     
+    # Sécurité métier: conserver aussi la meilleure solution vue par le protocole.
+    best_trial = min(scored_trials, key=lambda t: t[2])
+    _, best_protocol_params, best_protocol_score = best_trial
+    if best_protocol_score < result.fun:
+        logger.warning(
+            "La meilleure solution du protocole sensibilité est meilleure que le résultat solveur. "
+            "On conserve la solution protocole."
+        )
+
+        class _SimpleResult:
+            pass
+
+        fallback_result = _SimpleResult()
+        fallback_result.x = np.array(best_protocol_params, dtype=float)
+        fallback_result.fun = float(best_protocol_score)
+        fallback_result.success = result.success
+        fallback_result.message = "Solution protocole retenue (meilleure que solveur)."
+        fallback_result.nit = getattr(result, 'nit', 0)
+        fallback_result.nfev = getattr(result, 'nfev', 0)
+        result = fallback_result
+
     logger.info("Étape 4 : Affichage des paramètres optimaux...")
     best_kp, best_ti, best_td = result.x
     logger.info("==================================================")

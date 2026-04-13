@@ -45,3 +45,28 @@ INFO - [pid_tuner_main:336] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bure
 INFO - [pid_tuner_main:340] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Score au point de départ : 772.469482
 INFO - [pid_tuner_main:344] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Score avec test params [1.9, 544.5, 10.0] : 2857.563746
 INFO - [pid_tuner_main:347] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Différence de score détectée : 2085.094265
+INFO - [pid_tuner_main:109] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - --- Protocole sensibilité (10 essais PID) ---
+INFO - [pid_tuner_main:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 01 | Kp=0.950 Ti=1089.000 Td=0.000 | Score=772.469482
+INFO - [pid_tuner_main:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 02 | Kp=1.425 Ti=1089.000 Td=0.000 | Score=764.372186
+INFO - [pid_tuner_main:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 03 | Kp=0.665 Ti=1089.000 Td=0.000 | Score=662.428892
+INFO - [pid_tuner_main:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 04 | Kp=0.950 Ti=1000.000 Td=0.000 | Score=699.784900
+INFO - [pid_tuner_main:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 05 | Kp=0.950 Ti=762.300 Td=0.000 | Score=772.083402
+INFO - [pid_tuner_main:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 06 | Kp=0.950 Ti=1089.000 Td=5.000 | Score=7465.519221
+INFO - [pid_tuner_main:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 07 | Kp=0.950 Ti=1089.000 Td=20.000 | Score=2803.625520
+INFO - [pid_tuner_main:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 08 | Kp=0.100 Ti=1000.000 Td=0.000 | Score=788.751159
+INFO - [pid_tuner_main:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 09 | Kp=10.000 Ti=10.000 Td=100.000 | Score=2860.703746
+INFO - [pid_tuner_main:111] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Essai 10 | Kp=5.050 Ti=505.000 Td=50.000 | Score=2847.593208
+INFO - [pid_tuner_main:114] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Spread score absolu: 6803.090329 | Spread relatif: 1026.99%
+INFO - [pid_tuner_main:116] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Diagnostic: objectif sensible aux paramètres PID (OK pour optimisation).
+INFO - [pid_tuner_main:380] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Lancement de l'optimisation L-BFGS-B...
+INFO - [pid_tuner_main:449] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Étape 4 : Affichage des paramètres optimaux...
+INFO - [pid_tuner_main:451] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - ==================================================
+INFO - [pid_tuner_main:453] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - 🎉 OPTIMISATION TERMINÉE AVEC SUCCÈS ! 🎉
+INFO - [pid_tuner_main:456] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - ==================================================
+INFO - [pid_tuner_main:457] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - 👉 Kp optimal trouvé : 0.950
+INFO - [pid_tuner_main:458] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - 👉 Ti optimal trouvé : 1000.000 secondes
+INFO - [pid_tuner_main:459] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - 👉 Td optimal trouvé : 0.000 secondes
+INFO - [pid_tuner_main:460] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Score de l'erreur minimale : 699.784549
+INFO - [pid_tuner_main:461] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Nombre d'itérations : 2
+INFO - [pid_tuner_main:462] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - Nombre d'évaluations de la fonction : 32
+INFO - [pid_tuner_main:463] - C:\Users\EDVA10053293\OneDrive - Groupe Avril\Bureau\Python\pid_project\pid_tuner_main.py - ==================================================
