@@ -78,7 +78,16 @@ def run_model_reactivity_check(process_model, scaler_X, scaler_y, initial_state_
     logger.info("--- Fin diagnostic réactivité modèle ---")
 
 
-def run_pid_sensitivity_protocol(process_model, scaler_X, scaler_y, config, initial_state_df, initial_guess, bounds):
+def run_pid_sensitivity_protocol(
+    process_model,
+    scaler_X,
+    scaler_y,
+    config,
+    initial_state_df,
+    initial_guess,
+    bounds,
+    objective_fn=None,
+):
     """
     Protocole terrain: évalue une grille de 10 jeux PID pour vérifier
     que la fonction objectif est réellement sensible aux paramètres.
@@ -111,7 +120,10 @@ def run_pid_sensitivity_protocol(process_model, scaler_X, scaler_y, config, init
         if key in seen:
             continue
         seen.add(key)
-        score = evaluate_closed_loop_performance(params, process_model, scaler_X, scaler_y, config, initial_state_df)
+        if objective_fn is not None:
+            score = objective_fn(params)
+        else:
+            score = evaluate_closed_loop_performance(params, process_model, scaler_X, scaler_y, config, initial_state_df)
         scored_trials.append((idx, params, score))
 
     min_score = min(t[2] for t in scored_trials)
@@ -133,7 +145,15 @@ def run_pid_sensitivity_protocol(process_model, scaler_X, scaler_y, config, init
 
     return is_sensitive, scored_trials
 
-def evaluate_closed_loop_performance(params, process_model, scaler_X, scaler_y, config, initial_state_df) -> float:
+def evaluate_closed_loop_performance(
+    params,
+    process_model,
+    scaler_X,
+    scaler_y,
+    config,
+    initial_state_df,
+    simulation_duration_override_s=None,
+) -> float:
     """
     Fonction objectif pour l'optimiseur (Scipy).
     Prend un tableau de paramètres [Kp, Ti, Td] et retourne un score d'erreur.
@@ -178,6 +198,8 @@ def evaluate_closed_loop_performance(params, process_model, scaler_X, scaler_y, 
     sp_after_step = sp_before_step + sp_step_value
 
     duration_s = config['SIMULATION_PARAMS'].getint('simulation_duration_seconds', 60)
+    if simulation_duration_override_s is not None:
+        duration_s = int(simulation_duration_override_s)
     steps = int(duration_s / tsamp_s)
 
     # Choix de la métrique depuis la config
@@ -196,6 +218,29 @@ def evaluate_closed_loop_performance(params, process_model, scaler_X, scaler_y, 
                 lag_families[base_name] = 0
             lag_families[base_name] = max(lag_families[base_name], lag_num)
 
+    # Pré-calcul des index pour accélérer le décalage des lags (évite les copies DataFrame coûteuses)
+    feature_columns = list(current_features.columns)
+    col_idx = {c: i for i, c in enumerate(feature_columns)}
+    shift_pairs = []
+    for base_name, max_lag in lag_families.items():
+        for i in range(max_lag, 1, -1):
+            col_i = f'{base_name}_lag_{i}'
+            col_prev = f'{base_name}_lag_{i-1}'
+            if col_i in col_idx and col_prev in col_idx:
+                shift_pairs.append((col_idx[col_i], col_idx[col_prev]))
+
+    pv_lag_1_idx = col_idx.get('PV_real_lag_1')
+    mv_lag_1_idx = col_idx.get('MV_real_lag_1')
+    sp_lag_1_idx = col_idx.get('SP_real_lag_1')
+    if pv_lag_1_idx is None or mv_lag_1_idx is None or sp_lag_1_idx is None:
+        logger.error("Colonnes lag_1 obligatoires absentes (PV/MV/SP).")
+        return 1e12
+
+    current_features_arr = current_features.to_numpy(dtype=float, copy=True)
+    # Garder un DataFrame 1-ligne avec noms de colonnes pour éviter le warning sklearn
+    # "X does not have valid feature names" lorsque le scaler a été fit avec des noms.
+    current_features_df = pd.DataFrame(current_features_arr, columns=feature_columns)
+
     # --- 3. Boucle de Simulation Temporelle ---
     for step in range(steps):
         current_time_s = step * tsamp_s
@@ -207,7 +252,8 @@ def evaluate_closed_loop_performance(params, process_model, scaler_X, scaler_y, 
             target_sp = sp_after_step
 
         # b. L'IA prédit la prochaine PV (Mesure)
-        X_scaled = scaler_X.transform(current_features)
+        current_features_df.iloc[0, :] = current_features_arr[0, :]
+        X_scaled = scaler_X.transform(current_features_df)
         predicted_pv_scaled = process_model.predict(X_scaled)[0]
         predicted_pv = scaler_y.inverse_transform([[predicted_pv_scaled]])[0][0]
 
@@ -226,21 +272,17 @@ def evaluate_closed_loop_performance(params, process_model, scaler_X, scaler_y, 
             score += abs(error) * tsamp_s
 
         # e. Décalage de TOUS les lags (PV, MV, SP, perturbations...)
-        next_features = current_features.copy()
-        for base_name, max_lag in lag_families.items():
-            for i in range(max_lag, 1, -1):
-                col_i = f'{base_name}_lag_{i}'
-                col_prev = f'{base_name}_lag_{i-1}'
-                if col_i in next_features.columns and col_prev in next_features.columns:
-                    next_features[col_i] = next_features[col_prev]
+        next_features_arr = current_features_arr.copy()
+        for dst_idx, src_idx in shift_pairs:
+            next_features_arr[0, dst_idx] = current_features_arr[0, src_idx]
 
         # f. Injection des nouvelles valeurs à l'instant t-1 (lag_1)
-        next_features['PV_real_lag_1'] = predicted_pv
-        next_features['MV_real_lag_1'] = new_mv
-        next_features['SP_real_lag_1'] = target_sp
+        next_features_arr[0, pv_lag_1_idx] = predicted_pv
+        next_features_arr[0, mv_lag_1_idx] = new_mv
+        next_features_arr[0, sp_lag_1_idx] = target_sp
         # Note : les perturbations restent à leur dernière valeur connue (scénario constant)
 
-        current_features = next_features
+        current_features_arr = next_features_arr
 
     return score
 
@@ -368,12 +410,32 @@ def run_pid_tuner():
     )
     logger.info(f"Point de départ du solveur : Kp={initial_guess[0]}, Ti={initial_guess[1]}, Td={initial_guess[2]}")
     
+    # Horizon rapide pour optimiser, horizon complet pour validation finale.
+    full_duration_s = config['SIMULATION_PARAMS'].getint('simulation_duration_seconds', 60)
+    objective_duration_s = optimizer_cfg.getint('objective_duration_seconds', min(full_duration_s, 600)) if optimizer_cfg else min(full_duration_s, 600)
+    objective_duration_s = max(30, min(objective_duration_s, full_duration_s))
+
+    def objective_fn(pid_params):
+        return evaluate_closed_loop_performance(
+            pid_params,
+            process_model,
+            scaler_X,
+            scaler_y,
+            config,
+            initial_state_df,
+            simulation_duration_override_s=objective_duration_s,
+        )
+
+    logger.info(
+        f"Horizon optimisation={objective_duration_s}s | horizon validation finale={full_duration_s}s"
+    )
+
     # Diagnostic rapide : vérifier que la fonction objective est sensible aux paramètres PID
-    baseline_score = evaluate_closed_loop_performance(initial_guess, process_model, scaler_X, scaler_y, config, initial_state_df)
+    baseline_score = objective_fn(initial_guess)
     logger.info(f"Score au point de départ : {baseline_score:.6f}")
     
     test_params = [initial_guess[0] * 2, initial_guess[1] * 0.5, 10.0]
-    test_score = evaluate_closed_loop_performance(test_params, process_model, scaler_X, scaler_y, config, initial_state_df)
+    test_score = objective_fn(test_params)
     logger.info(f"Score avec test params [{test_params[0]:.1f}, {test_params[1]:.1f}, {test_params[2]:.1f}] : {test_score:.6f}")
     
     score_diff = abs(baseline_score - test_score)
@@ -391,6 +453,7 @@ def run_pid_tuner():
         initial_state_df,
         initial_guess,
         bounds,
+        objective_fn=objective_fn,
     )
 
     if not is_sensitive:
@@ -432,9 +495,8 @@ def run_pid_tuner():
             f"Kp={start_pt[0]:.3f}, Ti={start_pt[1]:.3f}, Td={start_pt[2]:.3f}"
         )
         res_i = minimize(
-            evaluate_closed_loop_performance,
+            objective_fn,
             start_pt,
-            args=(process_model, scaler_X, scaler_y, config, initial_state_df),
             bounds=bounds,
             method='L-BFGS-B',
             options={
@@ -489,9 +551,8 @@ def run_pid_tuner():
                 return False
 
             de_result = differential_evolution(
-                evaluate_closed_loop_performance,
+                objective_fn,
                 bounds=bounds,
-                args=(process_model, scaler_X, scaler_y, config, initial_state_df),
                 maxiter=de_maxiter,
                 popsize=de_popsize,
                 polish=de_polish,
@@ -531,6 +592,16 @@ def run_pid_tuner():
         fallback_result.nfev = getattr(result, 'nfev', 0)
         result = fallback_result
 
+    final_long_score = evaluate_closed_loop_performance(
+        result.x,
+        process_model,
+        scaler_X,
+        scaler_y,
+        config,
+        initial_state_df,
+        simulation_duration_override_s=full_duration_s,
+    )
+
     logger.info("Étape 4 : Affichage des paramètres optimaux...")
     best_kp, best_ti, best_td = result.x
     logger.info("==================================================")
@@ -542,7 +613,8 @@ def run_pid_tuner():
     logger.info(f"👉 Kp optimal trouvé : {best_kp:.3f}")
     logger.info(f"👉 Ti optimal trouvé : {best_ti:.3f} secondes")
     logger.info(f"👉 Td optimal trouvé : {best_td:.3f} secondes")
-    logger.info(f"Score de l'erreur minimale : {result.fun:.6f}")
+    logger.info(f"Score optimisation (horizon court) : {result.fun:.6f}")
+    logger.info(f"Score validation finale (horizon long {full_duration_s}s) : {final_long_score:.6f}")
     logger.info(f"Nombre d'itérations : {result.nit}")
     logger.info(f"Nombre d'évaluations de la fonction : {result.nfev}")
     logger.info("=="*25)
