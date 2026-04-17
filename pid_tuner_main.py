@@ -53,7 +53,6 @@ def _force_model_single_thread_for_tuning(process_model):
                 model_switched_to_single_thread = True
         elif hasattr(process_model, "n_jobs"):
             process_model.n_jobs = 1
-
             model_switched_to_single_thread = True
 
         if model_switched_to_single_thread:
