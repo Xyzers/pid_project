@@ -6,6 +6,7 @@ import logging # Sera initialisé plus tard
 import configparser
 import time
 import winsound
+import warnings
 from pathlib import Path
 
 # Vérification de base du dossier 'src'
@@ -39,6 +40,69 @@ def _clip_params_to_bounds(params, bounds):
     for val, (vmin, vmax) in zip(params, bounds):
         clipped.append(max(vmin, min(vmax, val)))
     return clipped
+
+
+def _force_model_single_thread_for_tuning(process_model):
+    """Force n_jobs=1 pour éviter le nested parallelism pendant le tuning global."""
+    try:
+        if hasattr(process_model, "get_params") and hasattr(process_model, "set_params"):
+            params = process_model.get_params(deep=True)
+            if "n_jobs" in params:
+                process_model.set_params(n_jobs=1)
+                logger.info("Mode robuste: modèle configuré en mono-thread (n_jobs=1) pendant le tuning.")
+                return
+        if hasattr(process_model, "n_jobs"):
+            process_model.n_jobs = 1
+            logger.info("Mode robuste: modèle configuré en mono-thread (n_jobs=1) pendant le tuning.")
+    except Exception as e:
+        logger.warning(f"Impossible de forcer n_jobs=1 sur le modèle chargé: {e}")
+
+
+def _read_optimizer_settings(config):
+    optimizer_cfg = config['OPTIMIZER'] if config.has_section('OPTIMIZER') else None
+
+    settings = {
+        'kp_min': optimizer_cfg.getfloat('kp_min', 0.1) if optimizer_cfg else 0.1,
+        'kp_max': optimizer_cfg.getfloat('kp_max', 10.0) if optimizer_cfg else 10.0,
+        'ti_min': optimizer_cfg.getfloat('ti_min', 10.0) if optimizer_cfg else 10.0,
+        'ti_max': optimizer_cfg.getfloat('ti_max', 2000.0) if optimizer_cfg else 2000.0,
+        'td_min': optimizer_cfg.getfloat('td_min', 0.0) if optimizer_cfg else 0.0,
+        'td_max': optimizer_cfg.getfloat('td_max', 100.0) if optimizer_cfg else 100.0,
+        'lbfgs_maxiter': optimizer_cfg.getint('lbfgs_maxiter', 80) if optimizer_cfg else 80,
+        'lbfgs_maxfun': optimizer_cfg.getint('lbfgs_maxfun', 250) if optimizer_cfg else 250,
+        'lbfgs_restarts': optimizer_cfg.getint('lbfgs_restarts', 4) if optimizer_cfg else 4,
+        'de_enabled': optimizer_cfg.getboolean('de_enabled', True) if optimizer_cfg else True,
+        'de_force_if_flat': optimizer_cfg.getboolean('de_force_if_flat', False) if optimizer_cfg else False,
+        'de_always_refine': optimizer_cfg.getboolean('de_always_refine', False) if optimizer_cfg else False,
+        'de_maxiter': optimizer_cfg.getint('de_maxiter', 8) if optimizer_cfg else 8,
+        'de_popsize': optimizer_cfg.getint('de_popsize', 6) if optimizer_cfg else 6,
+        'de_polish': optimizer_cfg.getboolean('de_polish', False) if optimizer_cfg else False,
+        'de_max_runtime_s': optimizer_cfg.getint('de_max_runtime_seconds', 300) if optimizer_cfg else 300,
+        'de_workers': optimizer_cfg.getint('de_workers', -1) if optimizer_cfg else -1,
+        'de_updating': optimizer_cfg.get('de_updating', 'deferred').strip().lower() if optimizer_cfg else 'deferred',
+        'suppress_nested_parallel_warning': optimizer_cfg.getboolean('suppress_nested_parallel_warning', True) if optimizer_cfg else True,
+    }
+
+    if settings['de_updating'] not in ('immediate', 'deferred'):
+        logger.warning(
+            f"Valeur de_updating invalide '{settings['de_updating']}', fallback sur 'deferred'."
+        )
+        settings['de_updating'] = 'deferred'
+
+    if settings['de_workers'] != 1 and settings['de_updating'] != 'deferred':
+        logger.warning(
+            "de_updating='deferred' forcé car de_workers!=1 (requis pour le parallélisme DE)."
+        )
+        settings['de_updating'] = 'deferred'
+
+    if settings['suppress_nested_parallel_warning']:
+        warnings.filterwarnings(
+            "ignore",
+            message=r".*Loky-backed parallel loops cannot be called in a multiprocessing.*",
+            category=UserWarning,
+        )
+
+    return settings
 
 
 def run_model_reactivity_check(process_model, scaler_X, scaler_y, initial_state_df):
@@ -269,6 +333,7 @@ def run_pid_tuner():
         
         logger.info(f"Tentative de chargement du modèle depuis : {model_path}")
         process_model = joblib.load(model_path)
+        _force_model_single_thread_for_tuning(process_model)
         
         logger.info(f"Tentative de chargement des scalers depuis : {scalers_path}")
         scalers_dict = joblib.load(scalers_path)
@@ -333,16 +398,16 @@ def run_pid_tuner():
     except ImportError:
         logger.error("ERREUR CRITIQUE: 'scipy' n'est pas installé. Tapez 'pip install scipy' dans le terminal.")
         sys.exit(1)
-        
-    optimizer_cfg = config['OPTIMIZER'] if config.has_section('OPTIMIZER') else None
+
+    optimizer_settings = _read_optimizer_settings(config)
 
     # Limites de recherche (Bounds) configurables via [OPTIMIZER]
-    kp_min = optimizer_cfg.getfloat('kp_min', 0.1) if optimizer_cfg else 0.1
-    kp_max = optimizer_cfg.getfloat('kp_max', 10.0) if optimizer_cfg else 10.0
-    ti_min = optimizer_cfg.getfloat('ti_min', 10.0) if optimizer_cfg else 10.0
-    ti_max = optimizer_cfg.getfloat('ti_max', 2000.0) if optimizer_cfg else 2000.0
-    td_min = optimizer_cfg.getfloat('td_min', 0.0) if optimizer_cfg else 0.0
-    td_max = optimizer_cfg.getfloat('td_max', 100.0) if optimizer_cfg else 100.0
+    kp_min = optimizer_settings['kp_min']
+    kp_max = optimizer_settings['kp_max']
+    ti_min = optimizer_settings['ti_min']
+    ti_max = optimizer_settings['ti_max']
+    td_min = optimizer_settings['td_min']
+    td_max = optimizer_settings['td_max']
     bounds = ((kp_min, kp_max), (ti_min, ti_max), (td_min, td_max))
     
     # Point de départ : utiliser les valeurs du test PID s'il existe, sinon valeurs raisonnables
@@ -411,9 +476,9 @@ def run_pid_tuner():
     
     # Lancement du solveur local (L-BFGS-B) en multi-start pour éviter les minima locaux.
     logger.info("Lancement de l'optimisation L-BFGS-B (multi-start)...")
-    lbfgs_maxiter = optimizer_cfg.getint('lbfgs_maxiter', 80) if optimizer_cfg else 80
-    lbfgs_maxfun = optimizer_cfg.getint('lbfgs_maxfun', 250) if optimizer_cfg else 250
-    lbfgs_restarts = optimizer_cfg.getint('lbfgs_restarts', 4) if optimizer_cfg else 4
+    lbfgs_maxiter = optimizer_settings['lbfgs_maxiter']
+    lbfgs_maxfun = optimizer_settings['lbfgs_maxfun']
+    lbfgs_restarts = optimizer_settings['lbfgs_restarts']
 
     # Construire les points de départ: guess initial + meilleurs essais protocole.
     sorted_trials = sorted(scored_trials, key=lambda t: t[2])
@@ -456,15 +521,16 @@ def run_pid_tuner():
     )
 
     # Filet de sécurité: si L-BFGS-B reste peu concluant, on peut tenter un solveur global.
-    de_always_refine = optimizer_cfg.getboolean('de_always_refine', False) if optimizer_cfg else False
+    de_always_refine = optimizer_settings['de_always_refine']
     if (getattr(result, 'nit', 0) <= 1) or de_always_refine:
-        optimizer_cfg = config['OPTIMIZER'] if config.has_section('OPTIMIZER') else None
-        de_enabled = optimizer_cfg.getboolean('de_enabled', True) if optimizer_cfg else True
-        de_force_if_flat = optimizer_cfg.getboolean('de_force_if_flat', False) if optimizer_cfg else False
-        de_maxiter = optimizer_cfg.getint('de_maxiter', 8) if optimizer_cfg else 8
-        de_popsize = optimizer_cfg.getint('de_popsize', 6) if optimizer_cfg else 6
-        de_polish = optimizer_cfg.getboolean('de_polish', False) if optimizer_cfg else False
-        de_max_runtime_s = optimizer_cfg.getint('de_max_runtime_seconds', 300) if optimizer_cfg else 300
+        de_enabled = optimizer_settings['de_enabled']
+        de_force_if_flat = optimizer_settings['de_force_if_flat']
+        de_maxiter = optimizer_settings['de_maxiter']
+        de_popsize = optimizer_settings['de_popsize']
+        de_polish = optimizer_settings['de_polish']
+        de_max_runtime_s = optimizer_settings['de_max_runtime_s']
+        de_workers = optimizer_settings['de_workers']
+        de_updating = optimizer_settings['de_updating']
 
         if not de_enabled:
             logger.warning("DE désactivé (de_enabled=false). Fin sur résultat L-BFGS-B.")
@@ -474,7 +540,7 @@ def run_pid_tuner():
             logger.warning("L-BFGS-B peu concluant. Tentative d'optimisation globale (differential_evolution)...")
             logger.info(
                 f"DE config: maxiter={de_maxiter}, popsize={de_popsize}, polish={de_polish}, "
-                f"max_runtime={de_max_runtime_s}s, workers=-1"
+                f"max_runtime={de_max_runtime_s}s, workers={de_workers}, updating={de_updating}"
             )
 
             de_start_t = time.perf_counter()
@@ -496,8 +562,8 @@ def run_pid_tuner():
                 popsize=de_popsize,
                 polish=de_polish,
                 seed=42,
-                workers=-1,
-                updating='deferred',
+                workers=de_workers,
+                updating=de_updating,
                 callback=_de_callback,
             )
             logger.info(
