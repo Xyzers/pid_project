@@ -43,7 +43,7 @@ def _clip_params_to_bounds(params, bounds):
 
 
 def _force_model_single_thread_for_tuning(process_model):
-    """Force n_jobs=1 pour éviter le nested parallelism pendant le tuning global."""
+    """Force n_jobs=1 pour éviter le parallélisme imbriqué pendant le tuning global."""
     try:
         if hasattr(process_model, "get_params") and hasattr(process_model, "set_params"):
             params = process_model.get_params(deep=True)
@@ -89,9 +89,9 @@ def _read_optimizer_settings(config):
         )
         settings['de_updating'] = 'deferred'
 
-    if settings['de_workers'] != 1 and settings['de_updating'] != 'deferred':
+    if settings['de_workers'] != 1 and settings['de_updating'] == 'immediate':
         logger.warning(
-            "de_updating='deferred' forcé car de_workers!=1 (requis pour le parallélisme DE)."
+            "de_updating='deferred' forcé car de_updating='immediate' exige de_workers=1."
         )
         settings['de_updating'] = 'deferred'
 
