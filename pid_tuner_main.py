@@ -45,14 +45,18 @@ def _clip_params_to_bounds(params, bounds):
 def _force_model_single_thread_for_tuning(process_model):
     """Force n_jobs=1 pour éviter le parallélisme imbriqué pendant le tuning global."""
     try:
+        model_switched_to_single_thread = False
         if hasattr(process_model, "get_params") and hasattr(process_model, "set_params"):
             params = process_model.get_params(deep=True)
             if "n_jobs" in params:
                 process_model.set_params(n_jobs=1)
-                logger.info("Mode robuste: modèle configuré en mono-thread (n_jobs=1) pendant le tuning.")
-                return
-        if hasattr(process_model, "n_jobs"):
+                model_switched_to_single_thread = True
+        elif hasattr(process_model, "n_jobs"):
             process_model.n_jobs = 1
+
+            model_switched_to_single_thread = True
+
+        if model_switched_to_single_thread:
             logger.info("Mode robuste: modèle configuré en mono-thread (n_jobs=1) pendant le tuning.")
     except Exception as e:
         logger.warning(f"Impossible de forcer n_jobs=1 sur le modèle chargé: {e}")
