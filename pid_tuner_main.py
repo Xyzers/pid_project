@@ -77,7 +77,7 @@ def _read_optimizer_settings(config):
         'de_maxiter': optimizer_cfg.getint('de_maxiter', 8) if optimizer_cfg else 8,
         'de_popsize': optimizer_cfg.getint('de_popsize', 6) if optimizer_cfg else 6,
         'de_polish': optimizer_cfg.getboolean('de_polish', False) if optimizer_cfg else False,
-        'de_max_runtime_s': optimizer_cfg.getint('de_max_runtime_seconds', 300) if optimizer_cfg else 300,
+        'de_max_runtime_seconds': optimizer_cfg.getint('de_max_runtime_seconds', 300) if optimizer_cfg else 300,
         'de_workers': optimizer_cfg.getint('de_workers', -1) if optimizer_cfg else -1,
         'de_updating': optimizer_cfg.get('de_updating', 'deferred').strip().lower() if optimizer_cfg else 'deferred',
         'suppress_nested_parallel_warning': optimizer_cfg.getboolean('suppress_nested_parallel_warning', True) if optimizer_cfg else True,
@@ -91,7 +91,8 @@ def _read_optimizer_settings(config):
 
     if settings['de_workers'] != 1 and settings['de_updating'] == 'immediate':
         logger.warning(
-            "de_updating='deferred' forcé car de_updating='immediate' exige de_workers=1."
+            "Incompatibilité détectée: de_updating='immediate' exige de_workers=1. "
+            "Fallback sur de_updating='deferred' pour conserver le parallélisme multi-cœur."
         )
         settings['de_updating'] = 'deferred'
 
@@ -528,7 +529,7 @@ def run_pid_tuner():
         de_maxiter = optimizer_settings['de_maxiter']
         de_popsize = optimizer_settings['de_popsize']
         de_polish = optimizer_settings['de_polish']
-        de_max_runtime_s = optimizer_settings['de_max_runtime_s']
+        de_max_runtime_s = optimizer_settings['de_max_runtime_seconds']
         de_workers = optimizer_settings['de_workers']
         de_updating = optimizer_settings['de_updating']
 
